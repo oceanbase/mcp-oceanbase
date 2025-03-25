@@ -1,4 +1,4 @@
-from oceanbase_install import ob_install
+from . import ob_install
 import asyncio
 
 

@@ -5,7 +5,7 @@ from typing import Any
 from mcp import GetPromptResult
 from mcp.server import Server
 import mcp.types as types
-from oceanbase_install import ob_install_function
+from . import ob_install_function
 
 # Configure logging
 logging.basicConfig(

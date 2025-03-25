@@ -1,4 +1,4 @@
-from oceanbase_mcp_server import server
+from . import server
 import asyncio
 
 

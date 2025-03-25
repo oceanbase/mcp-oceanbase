@@ -31,5 +31,5 @@ packages = [
 ]
 
 [project.scripts]
-oceanbase_mcp_server = "oceanbase_mcp_server:main"
-oceanbase_install = "oceanbase_install:main"
+oceanbase_mcp_server = "src.oceanbase_mcp_server:main"
+oceanbase_install = "src.oceanbase_install:main"
