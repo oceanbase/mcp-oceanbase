@@ -20,10 +20,10 @@ def is_docker_available():
         # 设置stdout和stderr为DEVNULL以避免输出干扰
         # check=True会在返回码非零时抛出CalledProcessError异常
         subprocess.run(
-            ['docker', '--version'],
+            ["docker", "--version"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            check=True
+            check=True,
         )
         return True
     except subprocess.CalledProcessError:
@@ -38,13 +38,13 @@ def is_docker_available():
 
 
 def start_oceanbase_with_log_check(
-        container_name: str = "oceanbase" + uuid.uuid4().hex,
-        root_password: str = "root",
-        port: int = 2881,
-        image: str = "oceanbase/oceanbase-ce:latest",
-        timeout: int = 240,
-        check_interval: int = 5,
-        log_keyword: str = "boot success"
+    container_name: str = "oceanbase" + uuid.uuid4().hex,
+    root_password: str = "root",
+    port: int = 2881,
+    image: str = "oceanbase/oceanbase-ce:latest",
+    timeout: int = 240,
+    check_interval: int = 5,
+    log_keyword: str = "boot success",
 ) -> str:
     """
     启动 OceanBase 数据库容器并通过日志检测启动状态
@@ -72,28 +72,28 @@ def start_oceanbase_with_log_check(
             capture_output=True,
             text=True,
             encoding="utf-8",
-            errors="ignore"
+            errors="ignore",
         )
         return result.stdout.lower()
 
     try:
-
         # 启动容器
         run_cmd = [
-            "docker", "run", "-d",
-            "--name", container_name,
-            "-p", f"{port}:2881",
-            "-e", "MODE=SLIM",
-            "-e", f"MYSQL_ROOT_PASSWORD={root_password}",
-            image
+            "docker",
+            "run",
+            "-d",
+            "--name",
+            container_name,
+            "-p",
+            f"{port}:2881",
+            "-e",
+            "MODE=SLIM",
+            "-e",
+            f"MYSQL_ROOT_PASSWORD={root_password}",
+            image,
         ]
 
-        result = subprocess.run(
-            run_cmd,
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        result = subprocess.run(run_cmd, capture_output=True, text=True, check=True)
         container_id = result.stdout.strip()
         logger.info(f"🟢 容器已启动 | ID: {container_id}")
 
@@ -106,7 +106,7 @@ def start_oceanbase_with_log_check(
             inspect_result = subprocess.run(
                 ["docker", "inspect", "--format={{.State.Status}}", container_name],
                 capture_output=True,
-                text=True
+                text=True,
             )
             container_status = inspect_result.stdout.strip()
 
@@ -118,7 +118,9 @@ def start_oceanbase_with_log_check(
             if log_keyword.lower() in logs:
                 logger.info(f"✅ 检测到启动成功标识: '{log_keyword}'")
                 logger.info(f"⏱️ 启动耗时: {int(time.time() - start_time)} 秒")
-                logger.debug(f"🔗 连接信息: mysql -h127.0.0.1 -P{port} -uroot -p{root_password}")
+                logger.debug(
+                    f"🔗 连接信息: mysql -h127.0.0.1 -P{port} -uroot -p{root_password}"
+                )
                 return "OceanBase Docker启动成功，container_id为：" + container_id
 
             logger.info(f"⏳ 等待启动 ({int(time.time() - start_time)}/{timeout}s)...")
@@ -132,7 +134,7 @@ def start_oceanbase_with_log_check(
             f"2. 资源不足: OceanBase 需要至少 2GB 内存",
             f"3. 查看完整日志: docker logs {container_name}",
             "--- 最后 50 行日志 ---",
-            "\n".join(logs.splitlines()[-50:])
+            "\n".join(logs.splitlines()[-50:]),
         ]
         raise RuntimeError("\n".join(error_msg))
 
@@ -140,7 +142,7 @@ def start_oceanbase_with_log_check(
         error_lines = [
             "🚨 容器启动失败:",
             f"命令: {' '.join(e.cmd)}",
-            f"错误: {e.stderr.strip() or '无输出'}"
+            f"错误: {e.stderr.strip() or '无输出'}",
         ]
         if "port is already allocated" in e.stderr.lower():
             error_lines.append(f"解决方案: 更换端口或停止占用 {port} 端口的进程")
@@ -159,7 +161,7 @@ def check_internet_connection(timeout=3) -> str:
     test_servers = [
         ("8.8.8.8", 53),  # Google DNS
         ("114.114.114.114", 53),  # 114 DNS
-        ("223.5.5.5", 53)  # AliDNS
+        ("223.5.5.5", 53),  # AliDNS
     ]
 
     for host, port in test_servers:
@@ -174,15 +176,19 @@ def check_internet_connection(timeout=3) -> str:
     return "失败！当前环境没有公网连接能力"
 
 
-def install_obd(sudo_user=True, password='') -> str:
+def install_obd(sudo_user=True, password="") -> str:
     """
     执行OceanBase All in One在线安装
     :param sudo_user: 是否使用管理员权限安装
     :param password: 可选sudo密码（安全风险提示）
     :return: 安装结果和obd路径元组 (bool, str)
+    https://www.oceanbase.com/docs/community-obd-cn-1000000002023460
+    https://www.oceanbase.com/docs/community-observer-cn-10000000000096602
     """
-    install_cmd = ('bash -c "$(curl -s https://obbusiness-private.oss-cn-shanghai.aliyuncs.com/download-center'
-                   '/opensource/oceanbase-all-in-one/installer.sh)"')
+    install_cmd = (
+        'bash -c "$(curl -s https://obbusiness-private.oss-cn-shanghai.aliyuncs.com/download-center'
+        '/opensource/oceanbase-all-in-one/installer.sh)"'
+    )
 
     try:
         if sudo_user:
@@ -195,7 +201,7 @@ def install_obd(sudo_user=True, password='') -> str:
                 shell=True,
                 check=True,
                 universal_newlines=True,
-                encoding='utf-8',
+                encoding="utf-8",
             )
             obd_path = os.path.expanduser("~/.oceanbase-all-in-one/obd/usr/bin/obd")
         else:
@@ -204,10 +210,99 @@ def install_obd(sudo_user=True, password='') -> str:
 
         # 设置环境变量
         env_script = os.path.expanduser("~/.oceanbase-all-in-one/bin/env.sh")
-        subprocess.run(f"source {env_script}", shell=True, executable="/bin/bash", check=True)
+        subprocess.run(
+            f"source {env_script}", shell=True, executable="/bin/bash", check=True
+        )
 
         return f"OBD 安装成功，opd_path: {obd_path}"
 
     except subprocess.CalledProcessError as e:
         return f"OBD 安装失败: {e.returncode}  {e.stderr} "
 
+
+def start_oceanbase_cluster(cluster_name: str):
+    """
+    启动 OceanBase 数据库集群
+
+    :param cluster_name: 集群名称 (如: obtest)
+    :return: 包含执行状态的字典 {
+        "success": bool,
+        "output": str,
+        "error": str
+    }
+    """
+    # 构造命令参数（避免shell注入风险）
+    cmd = ["obd", "cluster", "start", cluster_name]
+    result = execute_shell_command(cmd)
+
+    if result["success"]:
+        return f"✅ Cluster '{cluster_name}' started successfully\nOutput: {result['output']}"
+    else:
+        return f"❌ Failed to start cluster '{cluster_name}'\nError: {result['error']}"
+
+
+def check_oceanbase_cluster_status(cluster_name: str):
+    """
+    获取 OceanBase 集群状态信息
+
+    :param cluster_name: 集群名称 (如: obtest)
+    """
+    # 构造安全命令参数
+    cmd = ["obd", "cluster", "display", cluster_name]
+    status = execute_shell_command(cmd)
+    if status["success"]:
+        return f"🟢 Cluster '{cluster_name}' status:\n{status['output']}"
+    else:
+        if status["output"]:
+            msg = f"Command output: {status['output']}"
+            return (
+                f"🔴 Failed to get status for cluster '{cluster_name}' "
+                + f"Error: {status['error']}"
+                + msg
+            )
+        else:
+            return (
+                f"🔴 Failed to get status for cluster '{cluster_name}' "
+                + f"Error: {status['error']}"
+            )
+
+
+def execute_shell_command(cmd: list):
+    """
+    启动 OceanBase 数据库集群
+    :return: 包含执行状态的字典 {
+        "success": bool,
+        "output": str,
+        "error": str
+    }
+    """
+
+    try:
+        # 执行命令并捕获输出
+        result = subprocess.run(
+            cmd,
+            check=True,  # 非零退出码时自动抛 CalledProcessError
+            capture_output=True,
+            text=True,
+            timeout=300,  # 设置5分钟超时（按需调整）
+        )
+
+        msg = {"success": True, "output": result.stdout.strip(), "error": ""}
+
+    except subprocess.CalledProcessError as e:
+        # 处理命令执行失败
+        msg = {"success": False, "output": e.stdout.strip(), "error": e.stderr.strip()}
+
+    except FileNotFoundError:
+        # 处理命令不存在
+        msg = {"success": False, "output": "", "error": "command not found."}
+
+    except subprocess.TimeoutExpired:
+        # 处理超时
+        msg = {
+            "success": False,
+            "output": "",
+            "error": "Command timed out after 5 minutes",
+        }
+
+    return msg

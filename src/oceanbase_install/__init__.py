@@ -8,4 +8,4 @@ def main():
 
 
 # Expose important items at package level
-__all__ = ['main', 'ob_install']
+__all__ = ["main", "ob_install"]
