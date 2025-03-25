@@ -4,6 +4,8 @@ import os
 import time
 import logging
 import uuid
+import yaml
+import tempfile
 
 logger = logging.getLogger("oceanbase_mcp_server")
 
@@ -218,6 +220,80 @@ def install_obd(sudo_user=True, password="") -> str:
 
     except subprocess.CalledProcessError as e:
         return f"OBD 安装失败: {e.returncode}  {e.stderr} "
+
+
+def generate_ob_config(servers, global_config, server_common_config, user_config=None):
+    if not global_config:
+        global_config = {
+            "memory_limit": "6G",
+            "system_memory": "1G",
+            "datafile_size": "2G",
+            "datafile_next": "2G",
+            "datafile_maxsize": "20G",
+            "log_disk_size": "14G",
+            "cpu_count": 16,
+            "production_mode": False,
+            "enable_syslog_wf": False,
+            "max_syslog_file_count": 4,
+        }
+
+    if not server_common_config:
+        server_common_config = {
+            "mysql_port": 2881,
+            "rpc_port": 2882,
+            "obshell_port": 2886,
+            "home_path": "/root/observer",
+        }
+
+    if not global_config:
+        user_config = {
+            "username": "admin",
+            "password": "your_password",
+            "port": 22,
+            "timeout": 30,
+        }
+
+    """生成 OceanBase 部署配置字典结构"""
+    config = {"oceanbase-ce": {"servers": [], "global": global_config}}
+
+    if user_config:
+        config["user"] = user_config
+
+    # 生成服务器配置
+    for idx, (ip, zone) in enumerate(servers, 1):
+        server_name = f"server{idx}"
+
+        # 服务器节点配置
+        config["oceanbase-ce"]["servers"].append({"name": server_name, "ip": ip})
+
+        # 服务器个性化配置
+        config["oceanbase-ce"][server_name] = {**server_common_config, "zone": zone}
+
+    return config
+
+
+def deploy_oceanbase(cluster_name, config):
+    """部署 OceanBase 集群"""
+    try:
+        # 生成临时 YAML 文件
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".yaml") as f:
+            yaml.dump(config, f, sort_keys=False, default_flow_style=False, width=120)
+            temp_path = f.name
+            print(temp_path)
+
+        # 执行部署命令
+        cmd = ["obd", "cluster", "deploy", cluster_name, "-c", temp_path]
+
+        result = subprocess.run(
+            cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+
+        return True, result.stdout
+    except subprocess.CalledProcessError as e:
+        error_msg = f"部署失败: {e.stderr}\n建议检查：\n1. 服务器SSH连通性\n2. 端口冲突问题\n3. 磁盘空间是否充足"
+        return error_msg
+    except Exception as e:
+        return f"未知错误: {str(e)}"
 
 
 def start_oceanbase_cluster(cluster_name: str):

@@ -245,7 +245,22 @@ async def list_tools() -> list[types.Tool]:
         types.Tool(  # https://www.oceanbase.com/docs/community-obd-cn-1000000002023460
             name="deploy_oceanbase_via_obd",
             description="通过OBD部署 OceanBase 数据库",
-            inputSchema={"type": "object", "properties": {}, "required": []},
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "cluster_name": {"type": "string", "description": "部署集群名"},
+                    "servers": {
+                        "type": "array",
+                        "description": """通过询问用户，进行构造，比如: [
+                                                                        ("172.19.33.2", "zone1"),
+                                                                        ("172.19.33.3", "zone2"),
+                                                                        ("172.19.33.4", "zone3")
+                                                                    ]
+                        """,
+                    },
+                },
+                "required": ["cluster_name"],
+            },
         ),
         types.Tool(  # https://www.oceanbase.com/docs/community-obd-cn-1000000002023460
             name="start_oceanbase_via_obd",
@@ -292,10 +307,17 @@ async def handle_call_tool(
             return [types.TextContent(type="text", text=str(result))]
 
         elif name == "deploy_oceanbase_via_obd":
-            password = arguments.get("password")
-            if not password:
-                raise ValueError("password is required")
-            result = ob_install_function.install_obd(password=password)
+            cluster_name = arguments.get("cluster_name")
+            if not cluster_name:
+                raise ValueError("cluster_name is required")
+            servers = arguments.get("servers")
+            if not servers:
+                raise ValueError("servers is required")
+
+            config = ob_install_function.generate_ob_config(servers=servers)
+            result = ob_install_function.deploy_oceanbase(
+                cluster_name=cluster_name, config=config
+            )
             return [types.TextContent(type="text", text=str(result))]
 
         elif name == "start_oceanbase_via_obd":
