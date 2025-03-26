@@ -5,6 +5,7 @@ from typing import Any
 from mcp import GetPromptResult
 from mcp.server import Server
 import mcp.types as types
+from pydantic import AnyUrl
 from . import ob_install_function
 
 # Configure logging
@@ -37,8 +38,6 @@ PROMPT_TEMPLATE = """
 
 一切看起来很顺利，但偏偏供应商的文件配置错乱了，以至于到现在您手里没有完备的部署说明。🙃而且问题出在……有人自作聪明地将安装指南标记成了 "重要假期文档"，藏到了公司的节假日文件夹里。现在公司业务决策层要求您在**一天之内搭建并验证 OceanBase 数据库环境**，任务紧急！🌟
 
-幸运的是，您还有我——"Claude 助手"，随时为您提供技术支持！我们将借助 MCP Server 的强大功能高效完成这个任务。
-
 ---
 
 ### **第二步：选择安装部署方式**
@@ -62,26 +61,14 @@ PROMPT_TEMPLATE = """
   
 - **安装步骤：**
   1. **安装 OBD 工具**：  
-     请确保您已经在您的环境中安装了 OBD 工具。您可以通过以下命令直接安装：  
-     ```bash
-     curl -O https://xxxx/obd-installer && chmod +x ./obd-installer && ./obd-installer
-     ```
-     安装完成后请通过以下命令验证：  
-     ```bash
-     obd version
-     ```
 
   2. **初始化 OceanBase 集群**：  
 
-
   3. **验证部署成功**：  
-     完成部署后可以直接验证数据库状态：  
-     ```bash
-     obd cluster list
-     ```
+
 
 #### 如果用户选择 [2]: 基于 Docker 容器安装
-- **解释：** 使用 Docker 容器安装 OceanBase 数据库，适合现代化容器场景并且容易进行集群扩展。
+- **解释：** 使用 Docker 容器安装 OceanBase 数据库。
 
 ---
 
@@ -104,7 +91,7 @@ PROMPT_OCEANBASE_INSTALL = types.Prompt(
 
 PROMPT_OCEANBASE_INSTALL_OBD = types.Prompt(
     name=OCEANBASE_INSTALL_ODB,
-    description="基于OBD安装OceanBase数据库的工作流（1、环境校验 → 2、安装准备 → 3、安装）",
+    description="基于OBD安装OceanBase数据库的工作流：",
     arguments=[],
 )
 
@@ -119,6 +106,32 @@ PROMPT_OCEANBASE_INSTALL_DOCKER = types.Prompt(
         ),
     ],
 )
+
+
+@app.list_resources()
+async def list_resources() -> list[types.Resource]:
+    """List basic Hologres resources."""
+    return [
+        types.Resource(
+            uri="oceanbase:///install",
+            name="安装部署OceanBase方式方法",
+            description="例举出安装部署OceanBase方式方法",
+            mimeType="text/plain",
+        )
+    ]
+
+
+@app.read_resource()
+async def read_resource(uri: AnyUrl) -> str:
+    """Read resource content based on URI."""
+    uri_str = str(uri)
+    if not uri_str.startswith("oceanbase:///"):
+        raise ValueError(f"Invalid URI scheme: {uri_str}")
+
+    if uri_str.endswith("install"):
+        return "\n".join(
+            ["请用户从以下方式中选择一种安装：", "基于Docker安装", "基于OBD安装"]
+        )
 
 
 @app.list_prompts()
@@ -238,7 +251,12 @@ async def list_tools() -> list[types.Tool]:
             description="在线安装OBD",
             inputSchema={
                 "type": "object",
-                "properties": {"password": {"type": "string", "description": "密码"}},
+                "properties": {
+                    "password": {
+                        "type": "string",
+                        "description": "安装OBD需要服务器用户密码，以正确在线安装OBD",
+                    }
+                },
                 "required": ["password"],
             },
         ),
