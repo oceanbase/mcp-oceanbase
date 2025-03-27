@@ -10,6 +10,7 @@ from . import ob_install_function
 from mcp.server.sse import SseServerTransport
 
 import uvicorn
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -145,7 +146,10 @@ async def list_prompts() -> list[types.Prompt]:
         PROMPT_OCEANBASE_INSTALL_DOCKER,
     ]
 
-oceanbase_install_select="你想用哪种方式安装ob?docker方式还是obd方式"
+
+oceanbase_install_select = "你想用哪种方式安装ob?docker方式还是obd方式"
+
+
 @app.get_prompt()
 async def get_prompt(name: str, arguments: dict) -> GetPromptResult | None:
     logger.info("Get prompts...")
@@ -267,13 +271,86 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(  # https://www.oceanbase.com/docs/community-obd-cn-1000000002023460
             name="deploy_oceanbase_via_obd",
-            description="使用OBD的方式安装oceanbase(简称ob)时需要用到,通过OBD部署 OceanBase 数据库,这是使用OBD的方式安装oceanbase的第三个需要调用的工具",
+            description="""
+            使用OBD的方式安装oceanbase(简称ob)时需要用到,通过OBD部署 OceanBase 数据库,这是使用OBD的方式安装oceanbase的第三个需要调用的工具
+            该tools接受的参数，将被转换为集群配置信息，写入到yaml格式文件中。
+            下面是一个示例的yaml配置文件，提供了相关参数的说明：
+
+## Only need to configure when remote login is required
+# user:
+#   username: your username
+#   password: your password if need
+#   key_file: your ssh-key file path if need
+#   port: your ssh port, default 22
+#   timeout: ssh connection timeout (second), default 30
+oceanbase-ce:
+  servers:
+    - name: server1
+      # Please don't use hostname, only IP can be supported
+      ip: 172.19.33.2
+    - name: server2
+      ip: 172.19.33.3
+    - name: server3
+      ip: 172.19.33.4
+  global:
+    # Starting from observer version 4.2, the network selection for the observer is based on the 'local_ip' parameter, and the 'devname' parameter is no longer mandatory.
+    # If the 'local_ip' parameter is set, the observer will first use this parameter for the configuration, regardless of the 'devname' parameter.
+    # If only the 'devname' parameter is set, the observer will use the 'devname' parameter for the configuration.
+    # If neither the 'devname' nor the 'local_ip' parameters are set, the 'local_ip' parameter will be automatically assigned the IP address configured above.
+    # devname: eth0
+    cluster_id: 1
+    # please set memory limit to a suitable value which is matching resource. 
+    memory_limit: 6G # The maximum running memory for an observer
+    system_memory: 1G # The reserved system memory. system_memory is reserved for general tenants. The default value is 30G.
+    datafile_size: 2G # Size of the data file. 
+    datafile_next: 2G # the auto extend step. Please enter an capacity, such as 2G
+    datafile_maxsize: 20G # the auto extend max size. Please enter an capacity, such as 20G
+    log_disk_size: 14G # The size of disk space used by the clog files.
+    cpu_count: 16
+    production_mode: false
+    enable_syslog_wf: false # Print system logs whose levels are higher than WARNING to a separate log file. The default value is true.
+    max_syslog_file_count: 4 # The maximum number of reserved log files before enabling auto recycling. The default value is 0.
+    # root_password: # root user password, can be empty
+  server1:
+    mysql_port: 2881 # External port for OceanBase Database. The default value is 2881. DO NOT change this value after the cluster is started.
+    rpc_port: 2882 # Internal port for OceanBase Database. The default value is 2882. DO NOT change this value after the cluster is started.
+    obshell_port: 2886 # Operation and maintenance port for Oceanbase Database. The default value is 2886. This parameter is valid only when the version of oceanbase-ce is 4.2.2.0 or later.
+    #  The working directory for OceanBase Database. OceanBase Database is started under this directory. This is a required field.
+    home_path: /root/observer
+    # The directory for data storage. The default value is $home_path/store.
+    # data_dir: /data
+    # The directory for clog, ilog, and slog. The default value is the same as the data_dir value.
+    # redo_dir: /redo
+    zone: zone1
+  server2:
+    mysql_port: 2881 # External port for OceanBase Database. The default value is 2881. DO NOT change this value after the cluster is started.
+    rpc_port: 2882 # Internal port for OceanBase Database. The default value is 2882. DO NOT change this value after the cluster is started.
+    obshell_port: 2886 # Operation and maintenance port for Oceanbase Database. The default value is 2886. This parameter is valid only when the version of oceanbase-ce is 4.2.2.0 or later.
+    #  The working directory for OceanBase Database. OceanBase Database is started under this directory. This is a required field.
+    home_path: /root/observer
+    # The directory for data storage. The default value is $home_path/store.
+    # data_dir: /data
+    # The directory for clog, ilog, and slog. The default value is the same as the data_dir value.
+    # redo_dir: /redo
+    zone: zone2
+  server3:
+    mysql_port: 2881 # External port for OceanBase Database. The default value is 2881. DO NOT change this value after the cluster is started.
+    rpc_port: 2882 # Internal port for OceanBase Database. The default value is 2882. DO NOT change this value after the cluster is started.
+    obshell_port: 2886 # Operation and maintenance port for Oceanbase Database. The default value is 2886. This parameter is valid only when the version of oceanbase-ce is 4.2.2.0 or later.
+    #  The working directory for OceanBase Database. OceanBase Database is started under this directory. This is a required field.
+    home_path: /root/observer
+    # The directory for data storage. The default value is $home_path/store.
+    # data_dir: /data
+    # The directory for clog, ilog, and slog. The default value is the same as the data_dir value.
+    # redo_dir: /redo
+    zone: zone3
+            """,
             inputSchema={
                 "type": "object",
                 "properties": {
                     "cluster_name": {"type": "string", "description": "部署集群名"},
                     "servers": {
-                        "type": "array",
+                        "type": "dict",
                         "description": """通过询问用户，进行构造，比如: [
                                                                         ("172.19.33.2", "zone1"),
                                                                         ("172.19.33.3", "zone2"),
@@ -281,8 +358,44 @@ async def list_tools() -> list[types.Tool]:
                                                                     ]
                         """,
                     },
+                    "global_config": {
+                        "type": "dict",
+                        "description": """通过询问用户，进行构造，比如: {
+                                                                        "memory_limit": "6G",
+                                                                        "system_memory": "1G",
+                                                                        "datafile_size": "2G",
+                                                                        "datafile_next": "2G",
+                                                                        "datafile_maxsize": "20G",
+                                                                        "log_disk_size": "14G",
+                                                                        "cpu_count": 16,
+                                                                        "production_mode": False,
+                                                                        "enable_syslog_wf": False,
+                                                                        "max_syslog_file_count": 4,
+                                                                    }
+                        """,
+                    },
+                    "server_common_config": {
+                        "type": "dict",
+                        "description": """通过询问用户，进行构造，比如:          = {
+                                                                        "mysql_port": 2881,
+                                                                        "rpc_port": 2882,
+                                                                        "obshell_port": 2886,
+                                                                        "home_path": "/root/observer",
+                                                                    }
+                                                                    """,
+                    },
+                    "user_config": {
+                        "type": "dict",
+                        "description": """通过询问用户，进行构造，比如: {
+                                                                        "username": "jackson",
+                                                                        "password": "123456",
+                                                                        "port": 22,
+                                                                        "timeout": 30,
+                                                                    }
+                                                    """,
+                    },
                 },
-                "required": ["cluster_name"],
+                "required": ["cluster_name", "servers"],
             },
         ),
         types.Tool(  # https://www.oceanbase.com/docs/community-obd-cn-1000000002023460
@@ -368,8 +481,10 @@ async def handle_call_tool(
     except Exception as e:
         return [types.TextContent(type="text", text=f"Error: {str(e)}")]
 
+
 async def run_stdio_async() -> None:
     from mcp.server.stdio import stdio_server
+
     logger.info("Starting OceanBase Install MCP stdio server...")
     async with stdio_server() as (read_stream, write_stream):
         try:
@@ -379,21 +494,24 @@ async def run_stdio_async() -> None:
         except Exception as e:
             logger.error(f"Server error: {str(e)}", exc_info=True)
             raise
+
+
 async def run_sse_async(args) -> None:
     logger.info("Starting OceanBase Install MCP SSE server...")
     from starlette.applications import Starlette
     from starlette.routing import Mount, Route
-    from starlette.requests import Request  
+    from starlette.requests import Request
+
     sse = SseServerTransport("/messages/")
 
-    async def handle_sse(request:Request) -> None:
+    async def handle_sse(request: Request) -> None:
         async with sse.connect_sse(
             # 请求的作用域,包含请求的上下文信息
             request.scope,
             # 用于接收请求数据的异步函数
-            request.receive, 
+            request.receive,
             # 用于向客户端发送消息的异步函数
-            request._send
+            request._send,
             # 连接后,会返回两个流,read_stream 用于读取来自客户端的数据,write_stream用于发送数据到客户端
         ) as (read_stream, write_stream):
             await app.run(
@@ -421,23 +539,32 @@ async def run_sse_async(args) -> None:
     )
     server = uvicorn.Server(config)
     await server.serve()
+
+
 async def main() -> None:
     """Main entry point to run the MCP server."""
     # argparse是一个标准库,用于解析命令行参数
     import argparse
+
     # description的作用是提供帮助信息,当用户输入--help时会显示
-    parser = argparse.ArgumentParser(description='Run Oceanbase MCP server parameters')
+    parser = argparse.ArgumentParser(description="Run Oceanbase MCP server parameters")
     # --host 绑定的主机,0.0.0.0表示将在所有可用的网络接口上监听
-    parser.add_argument('--transport', default='stdio',
-                         help='Transports use in the Model Context Protocol')
-    parser.add_argument('--host', default='0.0.0.0',
-                         help='SSE Host to bind to')
-    parser.add_argument('--port', type=int, default=8020,
-                        help='SSE Port to listen on')
-    parser.add_argument('--debug', type=bool, default=False,
-                        help='wether enable the debugg mode of SSE')
-    parser.add_argument('--loglevel', default="info", choices=["debug", "info", "warn", "error"],
-                        help='Log level of SSE')
+    parser.add_argument(
+        "--transport",
+        default="stdio",
+        help="Transports use in the Model Context Protocol",
+    )
+    parser.add_argument("--host", default="0.0.0.0", help="SSE Host to bind to")
+    parser.add_argument("--port", type=int, default=8020, help="SSE Port to listen on")
+    parser.add_argument(
+        "--debug", type=bool, default=False, help="wether enable the debugg mode of SSE"
+    )
+    parser.add_argument(
+        "--loglevel",
+        default="info",
+        choices=["debug", "info", "warn", "error"],
+        help="Log level of SSE",
+    )
     # 调用parse_args()方法,程序将解析命令行传入的参数
     args = parser.parse_args()
     transport = args.transport
@@ -447,7 +574,6 @@ async def main() -> None:
         await run_stdio_async()
     else:
         await run_sse_async(args)
-
 
 
 if __name__ == "__main__":

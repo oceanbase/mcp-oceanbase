@@ -188,7 +188,7 @@ def install_obd(sudo_user=True, password="") -> str:
     https://www.oceanbase.com/docs/community-observer-cn-10000000000096602
     """
     if is_obd_available():
-        return f"OBD 安装成功，opd_path: {os.path.expanduser("~/.oceanbase-all-in-one/obd/usr/bin/obd")}"
+        return f"OBD 安装成功，opd_path: {os.path.expanduser('~/.oceanbase-all-in-one/obd/usr/bin/obd')}"
     install_cmd = (
         'bash -c "$(curl -s https://obbusiness-private.oss-cn-shanghai.aliyuncs.com/download-center'
         '/opensource/oceanbase-all-in-one/installer.sh)"'
@@ -378,6 +378,8 @@ def execute_shell_command(cmd: list):
         }
 
     return msg
+
+
 def is_obd_available():
     """
     检查当前系统OBD是否已安装
