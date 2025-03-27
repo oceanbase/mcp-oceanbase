@@ -222,7 +222,9 @@ def install_obd(sudo_user=True, password="") -> str:
         return f"OBD 安装失败: {e.returncode}  {e.stderr} "
 
 
-def generate_ob_config(servers, global_config, server_common_config, user_config=None):
+def generate_ob_config(
+    servers, global_config=None, server_common_config=None, user_config=None
+):
     if not global_config:
         global_config = {
             "memory_limit": "6G",
@@ -243,14 +245,6 @@ def generate_ob_config(servers, global_config, server_common_config, user_config
             "rpc_port": 2882,
             "obshell_port": 2886,
             "home_path": "/root/observer",
-        }
-
-    if not global_config:
-        user_config = {
-            "username": "admin",
-            "password": "your_password",
-            "port": 22,
-            "timeout": 30,
         }
 
     """生成 OceanBase 部署配置字典结构"""
