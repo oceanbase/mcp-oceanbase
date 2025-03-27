@@ -350,17 +350,17 @@ oceanbase-ce:
                 "properties": {
                     "cluster_name": {"type": "string", "description": "部署集群名"},
                     "servers": {
-                        "type": "dict",
+                        "type": "array",
                         "description": """通过询问用户，进行构造，比如: [
-                                                                        ("172.19.33.2", "zone1"),
-                                                                        ("172.19.33.3", "zone2"),
-                                                                        ("172.19.33.4", "zone3")
+                                                                        ["172.19.33.2", "zone1"],
+                                                                        ["172.19.33.3", "zone2"], 
+                                                                        ["172.19.33.4", "zone3"]
                                                                     ]
                         """,
                     },
                     "global_config": {
-                        "type": "dict",
-                        "description": """通过询问用户，进行构造，比如: {
+                        "type": "array",
+                        "description": """通过询问用户，进行构造，比如: [
                                                                         "memory_limit": "6G",
                                                                         "system_memory": "1G",
                                                                         "datafile_size": "2G",
@@ -371,27 +371,27 @@ oceanbase-ce:
                                                                         "production_mode": False,
                                                                         "enable_syslog_wf": False,
                                                                         "max_syslog_file_count": 4,
-                                                                    }
+                                                                    ]
                         """,
                     },
                     "server_common_config": {
-                        "type": "dict",
-                        "description": """通过询问用户，进行构造，比如:          = {
+                        "type": "array",
+                        "description": """通过询问用户，进行构造，比如: [
                                                                         "mysql_port": 2881,
                                                                         "rpc_port": 2882,
                                                                         "obshell_port": 2886,
                                                                         "home_path": "/root/observer",
-                                                                    }
+                                                                    ]
                                                                     """,
                     },
                     "user_config": {
-                        "type": "dict",
-                        "description": """通过询问用户，进行构造，比如: {
+                        "type": "array",
+                        "description": """通过询问用户，进行构造，比如: [
                                                                         "username": "jackson",
                                                                         "password": "123456",
                                                                         "port": 22,
                                                                         "timeout": 30,
-                                                                    }
+                                                                    ]
                                                     """,
                     },
                 },
