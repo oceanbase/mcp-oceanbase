@@ -7,7 +7,9 @@ from mcp.server import Server
 import mcp.types as types
 from pydantic import AnyUrl
 from . import ob_install_function
+from mcp.server.sse import SseServerTransport
 
+import uvicorn
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -57,7 +59,7 @@ PROMPT_TEMPLATE = """
 ### **第三步：基于用户选项引导安装部署**
 
 #### 如果用户选择 [1]: 基于 OBD 工具安装
-- **解释：** 我们将使用 OBD 工具快速安装 OceanBase 数据库。OBD 的全称是 OceanBase Deployment Tool，它是 OceanBase 官方提供的一款自动化部署工具。
+- **解释：** 我们将使用 OBD 工具快速安装 OceanBase 数据库。OBD 的全称是 OceanBase Deployer，它是 OceanBase 官方提供的一款自动化部署工具。
   
 - **安装步骤：**
   1. **安装 OBD 工具**：  
@@ -136,15 +138,17 @@ async def read_resource(uri: AnyUrl) -> str:
 
 @app.list_prompts()
 async def list_prompts() -> list[types.Prompt]:
+    logger.info("List prompts...")
     return [
         PROMPT_OCEANBASE_INSTALL,
         PROMPT_OCEANBASE_INSTALL_OBD,
         PROMPT_OCEANBASE_INSTALL_DOCKER,
     ]
 
-
+oceanbase_install_select="你想用哪种方式安装ob?docker方式还是obd方式"
 @app.get_prompt()
 async def get_prompt(name: str, arguments: dict) -> GetPromptResult | None:
+    logger.info("Get prompts...")
     if name == "oceanbase_install":
         return types.GetPromptResult(
             description="prompt for oceanbase install",
@@ -166,6 +170,7 @@ async def get_prompt(name: str, arguments: dict) -> GetPromptResult | None:
                             使用Docker快速安装OceanBase,需按照以下步骤进行：
                             1、检测是否有docker环境
                             2、调用start_docker_ob mcp tool启动oceanbase
+                            3、docker启动的时间较长,请告诉用户耐心等待
                             """
                         ),
                     )
@@ -221,7 +226,7 @@ async def list_tools() -> list[types.Tool]:
     return [
         types.Tool(
             name="docker_env_check",
-            description="检测是否有docker环境，基于docker安装OceanBase，必须要有docker环境",
+            description="使用docker方式安装oceanbase(简称ob)时需要用到,检测是否有docker环境,这是docker方式安装oceanbase的第一个需要调用的工具",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -238,17 +243,17 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="start_docker_ob",
-            description="通过Docker启动OceanBase数据库",
+            description="使用docker方式安装oceanbase(简称ob)时需要用到,通过Docker启动OceanBase数据库,这是第二个需要调用的工具",
             inputSchema={"type": "object", "properties": {}, "required": []},
         ),
         types.Tool(
             name="check_internet_connection",
-            description="检测当前环境是否具有公网连接能力",
+            description="使用OBD的方式安装oceanbase(简称ob)时需要用到,这是使用OBD的方式安装oceanbase的第一个需要调用的工具",
             inputSchema={"type": "object", "properties": {}, "required": []},
         ),
         types.Tool(
             name="install_obd_online",
-            description="在线安装OBD",
+            description="使用OBD的方式安装oceanbase(简称ob)时需要用到,在线安装OBD,这是使用OBD的方式安装oceanbase的第二个需要调用的工具",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -262,7 +267,7 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(  # https://www.oceanbase.com/docs/community-obd-cn-1000000002023460
             name="deploy_oceanbase_via_obd",
-            description="通过OBD部署 OceanBase 数据库",
+            description="使用OBD的方式安装oceanbase(简称ob)时需要用到,通过OBD部署 OceanBase 数据库,这是使用OBD的方式安装oceanbase的第三个需要调用的工具",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -298,6 +303,7 @@ async def handle_call_tool(
     name: str, arguments: dict[str, Any] | None
 ) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
     """Handle tool execution requests"""
+    logger.info("Call tools...")
     try:
         # Docker
         if name == "docker_env_check":
@@ -362,12 +368,9 @@ async def handle_call_tool(
     except Exception as e:
         return [types.TextContent(type="text", text=f"Error: {str(e)}")]
 
-
-async def main():
-    """Main entry point to run the MCP server."""
+async def run_stdio_async() -> None:
     from mcp.server.stdio import stdio_server
-
-    logger.info("Starting OceanBase Install MCP server...")
+    logger.info("Starting OceanBase Install MCP stdio server...")
     async with stdio_server() as (read_stream, write_stream):
         try:
             await app.run(
@@ -376,6 +379,75 @@ async def main():
         except Exception as e:
             logger.error(f"Server error: {str(e)}", exc_info=True)
             raise
+async def run_sse_async(args) -> None:
+    logger.info("Starting OceanBase Install MCP SSE server...")
+    from starlette.applications import Starlette
+    from starlette.routing import Mount, Route
+    from starlette.requests import Request  
+    sse = SseServerTransport("/messages/")
+
+    async def handle_sse(request:Request) -> None:
+        async with sse.connect_sse(
+            # 请求的作用域,包含请求的上下文信息
+            request.scope,
+            # 用于接收请求数据的异步函数
+            request.receive, 
+            # 用于向客户端发送消息的异步函数
+            request._send
+            # 连接后,会返回两个流,read_stream 用于读取来自客户端的数据,write_stream用于发送数据到客户端
+        ) as (read_stream, write_stream):
+            await app.run(
+                read_stream,
+                write_stream,
+                app.create_initialization_options(),
+            )
+
+    starlette_app = Starlette(
+        debug=args.debug,
+        routes=[
+            # 当客户端请求/sse时,调用handle_sse处理
+            Route("/sse", endpoint=handle_sse),
+            # 当客户端请求/message时,调用sse的handle_post_message处理
+            Mount("/messages/", app=sse.handle_post_message),
+        ],
+    )
+
+    config = uvicorn.Config(
+        starlette_app,
+        host=args.host,
+        port=args.port,
+        log_level=args.loglevel,
+        timeout_keep_alive=5,  # 5秒后超时
+    )
+    server = uvicorn.Server(config)
+    await server.serve()
+async def main() -> None:
+    """Main entry point to run the MCP server."""
+    # argparse是一个标准库,用于解析命令行参数
+    import argparse
+    # description的作用是提供帮助信息,当用户输入--help时会显示
+    parser = argparse.ArgumentParser(description='Run Oceanbase MCP server parameters')
+    # --host 绑定的主机,0.0.0.0表示将在所有可用的网络接口上监听
+    parser.add_argument('--transport', default='stdio',
+                         help='Transports use in the Model Context Protocol')
+    parser.add_argument('--host', default='0.0.0.0',
+                         help='SSE Host to bind to')
+    parser.add_argument('--port', type=int, default=8020,
+                        help='SSE Port to listen on')
+    parser.add_argument('--debug', type=bool, default=False,
+                        help='wether enable the debugg mode of SSE')
+    parser.add_argument('--loglevel', default="info", choices=["debug", "info", "warn", "error"],
+                        help='Log level of SSE')
+    # 调用parse_args()方法,程序将解析命令行传入的参数
+    args = parser.parse_args()
+    transport = args.transport
+    if transport not in ["stdio", "sse"]:
+        raise ValueError(f"Unknown transport: {transport}")
+    if transport == "stdio":
+        await run_stdio_async()
+    else:
+        await run_sse_async(args)
+
 
 
 if __name__ == "__main__":

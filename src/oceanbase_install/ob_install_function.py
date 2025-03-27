@@ -98,47 +98,47 @@ def start_oceanbase_with_log_check(
         result = subprocess.run(run_cmd, capture_output=True, text=True, check=True)
         container_id = result.stdout.strip()
         logger.info(f"🟢 容器已启动 | ID: {container_id}")
-
+        return f"OceanBase Docker启动成功，容器id为：{container_id}"
         # 日志检测循环
-        start_time = time.time()
-        logger.info(f"🔍 开始检测启动日志 (关键词: '{log_keyword}')...")
+        # start_time = time.time()
+        # logger.info(f"🔍 开始检测启动日志 (关键词: '{log_keyword}')...")
 
-        while (time.time() - start_time) < timeout:
-            # 获取容器状态
-            inspect_result = subprocess.run(
-                ["docker", "inspect", "--format={{.State.Status}}", container_name],
-                capture_output=True,
-                text=True,
-            )
-            container_status = inspect_result.stdout.strip()
+        # while (time.time() - start_time) < timeout:
+        #     # 获取容器状态
+        #     inspect_result = subprocess.run(
+        #         ["docker", "inspect", "--format={{.State.Status}}", container_name],
+        #         capture_output=True,
+        #         text=True,
+        #     )
+        #     container_status = inspect_result.stdout.strip()
 
-            if container_status != "running":
-                raise RuntimeError(f"容器状态异常: {container_status}")
+        #     if container_status != "running":
+        #         raise RuntimeError(f"容器状态异常: {container_status}")
 
-            # 获取新增日志
-            logs = _get_container_logs(container_name)
-            if log_keyword.lower() in logs:
-                logger.info(f"✅ 检测到启动成功标识: '{log_keyword}'")
-                logger.info(f"⏱️ 启动耗时: {int(time.time() - start_time)} 秒")
-                logger.debug(
-                    f"🔗 连接信息: mysql -h127.0.0.1 -P{port} -uroot -p{root_password}"
-                )
-                return "OceanBase Docker启动成功，container_id为：" + container_id
+        #     # 获取新增日志
+        #     logs = _get_container_logs(container_name)
+        #     if log_keyword.lower() in logs:
+        #         logger.info(f"✅ 检测到启动成功标识: '{log_keyword}'")
+        #         logger.info(f"⏱️ 启动耗时: {int(time.time() - start_time)} 秒")
+        #         logger.debug(
+        #             f"🔗 连接信息: mysql -h127.0.0.1 -P{port} -uroot -p{root_password}"
+        #         )
+        #         return "OceanBase Docker启动成功，container_id为：" + container_id
 
-            logger.info(f"⏳ 等待启动 ({int(time.time() - start_time)}/{timeout}s)...")
-            time.sleep(check_interval)
+        #     logger.info(f"⏳ 等待启动 ({int(time.time() - start_time)}/{timeout}s)...")
+        #     time.sleep(check_interval)
 
         # 超时处理
-        logs = _get_container_logs(container_name)
-        error_msg = [
-            "🚨 启动超时，可能原因:",
-            f"1. 镜像下载慢: 尝试手动执行 docker pull {image}",
-            f"2. 资源不足: OceanBase 需要至少 2GB 内存",
-            f"3. 查看完整日志: docker logs {container_name}",
-            "--- 最后 50 行日志 ---",
-            "\n".join(logs.splitlines()[-50:]),
-        ]
-        raise RuntimeError("\n".join(error_msg))
+        # logs = _get_container_logs(container_name)
+        # error_msg = [
+        #     "🚨 启动超时，可能原因:",
+        #     f"1. 镜像下载慢: 尝试手动执行 docker pull {image}",
+        #     f"2. 资源不足: OceanBase 需要至少 2GB 内存",
+        #     f"3. 查看完整日志: docker logs {container_name}",
+        #     "--- 最后 50 行日志 ---",
+        #     "\n".join(logs.splitlines()[-50:]),
+        # ]
+        # raise RuntimeError("\n".join(error_msg))
 
     except subprocess.CalledProcessError as e:
         error_lines = [
@@ -187,6 +187,8 @@ def install_obd(sudo_user=True, password="") -> str:
     https://www.oceanbase.com/docs/community-obd-cn-1000000002023460
     https://www.oceanbase.com/docs/community-observer-cn-10000000000096602
     """
+    if is_obd_available():
+        return f"OBD 安装成功，opd_path: {os.path.expanduser("~/.oceanbase-all-in-one/obd/usr/bin/obd")}"
     install_cmd = (
         'bash -c "$(curl -s https://obbusiness-private.oss-cn-shanghai.aliyuncs.com/download-center'
         '/opensource/oceanbase-all-in-one/installer.sh)"'
@@ -376,3 +378,30 @@ def execute_shell_command(cmd: list):
         }
 
     return msg
+def is_obd_available():
+    """
+    检查当前系统OBD是否已安装
+
+    Returns:
+        bool: 如果OBD命令可执行返回True，否则返回False。
+    """
+    try:
+        # 使用subprocess运行obd --version命令
+        # 设置stdout和stderr为DEVNULL以避免输出干扰
+        # check=True会在返回码非零时抛出CalledProcessError异常
+        subprocess.run(
+            ["obd", "--version"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+        return True
+    except subprocess.CalledProcessError:
+        # 命令存在但执行失败（如权限问题）
+        return False
+    except FileNotFoundError:
+        # Docker命令不存在
+        return False
+    except Exception as e:
+        # 其他异常情况（如超时，但通常不会发生）
+        return False
