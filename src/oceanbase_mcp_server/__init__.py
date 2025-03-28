@@ -1,5 +1,6 @@
-from oceanbase_mcp_server import server
 import asyncio
+
+from . import server
 
 
 def main():
