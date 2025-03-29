@@ -7,24 +7,19 @@ requires-python = ">=3.11"
 dependencies = [
     "mcp[cli]>=1.0.0",
     "mysql-connector-python>=9.1.0",
+    "python-dotenv"
 ]
+
 [[project.authors]]
 name = "OceanBase"
-email = ""
+email = "open_contact@oceanbase.com"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.hatch.build]
-include = [
-    "src/oceanbase_mcp_server/**/*.py",
-]
-
 [tool.hatch.build.targets.wheel]
-packages = [
-    "src"
-]
+packages = ["src/oceanbase_mcp_server"]
 
 [project.scripts]
 oceanbase_mcp_server = "oceanbase_mcp_server:main"
