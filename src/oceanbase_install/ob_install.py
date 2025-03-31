@@ -13,7 +13,9 @@ import uvicorn
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    filename="ob_install.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("oceanbase_mcp_server")
 
@@ -257,7 +259,7 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="install_obd_online",
-            description="使用OBD的方式安装oceanbase(简称ob)时需要用到,在线安装OBD,这是使用OBD的方式安装oceanbase的第二个需要调用的工具",
+            description="使用OBD的方式安装oceanbase(简称ob)时需要用到,安装OBD,这是使用OBD的方式安装oceanbase的第二个需要调用的工具",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -271,80 +273,8 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(  # https://www.oceanbase.com/docs/community-obd-cn-1000000002023460
             name="deploy_oceanbase_via_obd",
-            description="""
-            使用OBD的方式安装oceanbase(简称ob)时需要用到,通过OBD部署 OceanBase 数据库,这是使用OBD的方式安装oceanbase的第三个需要调用的工具
-            该tools接受的参数，将被转换为集群配置信息，写入到yaml格式文件中。
-            下面是一个示例的yaml配置文件，提供了相关参数的说明：
-
-## Only need to configure when remote login is required
-# user:
-#   username: your username
-#   password: your password if need
-#   key_file: your ssh-key file path if need
-#   port: your ssh port, default 22
-#   timeout: ssh connection timeout (second), default 30
-oceanbase-ce:
-  servers:
-    - name: server1
-      # Please don't use hostname, only IP can be supported
-      ip: 172.19.33.2
-    - name: server2
-      ip: 172.19.33.3
-    - name: server3
-      ip: 172.19.33.4
-  global:
-    # Starting from observer version 4.2, the network selection for the observer is based on the 'local_ip' parameter, and the 'devname' parameter is no longer mandatory.
-    # If the 'local_ip' parameter is set, the observer will first use this parameter for the configuration, regardless of the 'devname' parameter.
-    # If only the 'devname' parameter is set, the observer will use the 'devname' parameter for the configuration.
-    # If neither the 'devname' nor the 'local_ip' parameters are set, the 'local_ip' parameter will be automatically assigned the IP address configured above.
-    # devname: eth0
-    cluster_id: 1
-    # please set memory limit to a suitable value which is matching resource. 
-    memory_limit: 6G # The maximum running memory for an observer
-    system_memory: 1G # The reserved system memory. system_memory is reserved for general tenants. The default value is 30G.
-    datafile_size: 2G # Size of the data file. 
-    datafile_next: 2G # the auto extend step. Please enter an capacity, such as 2G
-    datafile_maxsize: 20G # the auto extend max size. Please enter an capacity, such as 20G
-    log_disk_size: 14G # The size of disk space used by the clog files.
-    cpu_count: 16
-    production_mode: false
-    enable_syslog_wf: false # Print system logs whose levels are higher than WARNING to a separate log file. The default value is true.
-    max_syslog_file_count: 4 # The maximum number of reserved log files before enabling auto recycling. The default value is 0.
-    # root_password: # root user password, can be empty
-  server1:
-    mysql_port: 2881 # External port for OceanBase Database. The default value is 2881. DO NOT change this value after the cluster is started.
-    rpc_port: 2882 # Internal port for OceanBase Database. The default value is 2882. DO NOT change this value after the cluster is started.
-    obshell_port: 2886 # Operation and maintenance port for Oceanbase Database. The default value is 2886. This parameter is valid only when the version of oceanbase-ce is 4.2.2.0 or later.
-    #  The working directory for OceanBase Database. OceanBase Database is started under this directory. This is a required field.
-    home_path: /root/observer
-    # The directory for data storage. The default value is $home_path/store.
-    # data_dir: /data
-    # The directory for clog, ilog, and slog. The default value is the same as the data_dir value.
-    # redo_dir: /redo
-    zone: zone1
-  server2:
-    mysql_port: 2881 # External port for OceanBase Database. The default value is 2881. DO NOT change this value after the cluster is started.
-    rpc_port: 2882 # Internal port for OceanBase Database. The default value is 2882. DO NOT change this value after the cluster is started.
-    obshell_port: 2886 # Operation and maintenance port for Oceanbase Database. The default value is 2886. This parameter is valid only when the version of oceanbase-ce is 4.2.2.0 or later.
-    #  The working directory for OceanBase Database. OceanBase Database is started under this directory. This is a required field.
-    home_path: /root/observer
-    # The directory for data storage. The default value is $home_path/store.
-    # data_dir: /data
-    # The directory for clog, ilog, and slog. The default value is the same as the data_dir value.
-    # redo_dir: /redo
-    zone: zone2
-  server3:
-    mysql_port: 2881 # External port for OceanBase Database. The default value is 2881. DO NOT change this value after the cluster is started.
-    rpc_port: 2882 # Internal port for OceanBase Database. The default value is 2882. DO NOT change this value after the cluster is started.
-    obshell_port: 2886 # Operation and maintenance port for Oceanbase Database. The default value is 2886. This parameter is valid only when the version of oceanbase-ce is 4.2.2.0 or later.
-    #  The working directory for OceanBase Database. OceanBase Database is started under this directory. This is a required field.
-    home_path: /root/observer
-    # The directory for data storage. The default value is $home_path/store.
-    # data_dir: /data
-    # The directory for clog, ilog, and slog. The default value is the same as the data_dir value.
-    # redo_dir: /redo
-    zone: zone3
-            """,
+            description="""使用OBD的方式安装oceanbase(简称ob)时需要用到,通过OBD部署 OceanBase 数据库,这是使用OBD的方式安装oceanbase的第三个需要调用的工具
+            在执行该工具之前,请用户输入下一步需要的参数,等用户输入信息后再执行。""",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -359,39 +289,39 @@ oceanbase-ce:
                         """,
                     },
                     "global_config": {
-                        "type": "array",
-                        "description": """通过询问用户，进行构造，比如: [
-                                                                        "memory_limit": "6G",
+                        "type": "object",
+                        "description": """通过询问用户，进行构造，比如: {
+                                                                        "memory_limit": "4G",
                                                                         "system_memory": "1G",
                                                                         "datafile_size": "2G",
                                                                         "datafile_next": "2G",
                                                                         "datafile_maxsize": "20G",
                                                                         "log_disk_size": "14G",
-                                                                        "cpu_count": 16,
+                                                                        "cpu_count": 4,
                                                                         "production_mode": False,
                                                                         "enable_syslog_wf": False,
                                                                         "max_syslog_file_count": 4,
-                                                                    ]
+                                                                    }
                         """,
                     },
                     "server_common_config": {
-                        "type": "array",
-                        "description": """通过询问用户，进行构造，比如: [
+                        "type": "object",
+                        "description": """通过询问用户，进行构造，比如: {
                                                                         "mysql_port": 2881,
                                                                         "rpc_port": 2882,
                                                                         "obshell_port": 2886,
                                                                         "home_path": "/root/observer",
-                                                                    ]
+                                                                    }
                                                                     """,
                     },
                     "user_config": {
-                        "type": "array",
-                        "description": """通过询问用户，进行构造，比如: [
+                        "type": "object",
+                        "description": """通过询问用户，进行构造，比如: {
                                                                         "username": "jackson",
                                                                         "password": "123456",
                                                                         "port": 22,
                                                                         "timeout": 30,
-                                                                    ]
+                                                                    }
                                                     """,
                     },
                 },
@@ -400,13 +330,31 @@ oceanbase-ce:
         ),
         types.Tool(  # https://www.oceanbase.com/docs/community-obd-cn-1000000002023460
             name="start_oceanbase_via_obd",
-            description="启动通过OBD部署的 OceanBase 数据库",
-            inputSchema={"type": "object", "properties": {}, "required": []},
+            description="使用OBD的方式安装oceanbase(简称ob)时需要用到,启动oceanbase集群,这是使用OBD的方式安装oceanbase的第四个需要调用的工具",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "cluster_name": {
+                        "type": "string",
+                        "description": "从第三步拿到的cluster_name",
+                    }
+                },
+                "required": [],
+            },
         ),
         types.Tool(  # https://www.oceanbase.com/docs/community-obd-cn-1000000002023460
             name="check_oceanbase_cluster_status",
-            description="检查 OceanBase 集群状态",
-            inputSchema={"type": "object", "properties": {}, "required": []},
+            description="使用OBD的方式安装oceanbase(简称ob)时需要用到,检查oceanbase集群状态,这是使用OBD的方式安装oceanbase的第五个需要调用的工具",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "cluster_name": {
+                        "type": "string",
+                        "description": "从第三步拿到的cluster_name",
+                    }
+                },
+                "required": [],
+            },
         ),
     ]
 

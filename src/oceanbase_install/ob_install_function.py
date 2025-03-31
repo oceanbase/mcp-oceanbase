@@ -229,13 +229,13 @@ def generate_ob_config(
 ):
     if not global_config:
         global_config = {
-            "memory_limit": "6G",
+            "memory_limit": "4G",
             "system_memory": "1G",
             "datafile_size": "2G",
             "datafile_next": "2G",
             "datafile_maxsize": "20G",
             "log_disk_size": "14G",
-            "cpu_count": 16,
+            "cpu_count": 4,
             "production_mode": False,
             "enable_syslog_wf": False,
             "max_syslog_file_count": 4,
@@ -275,7 +275,7 @@ def deploy_oceanbase(cluster_name, config):
         with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".yaml") as f:
             yaml.dump(config, f, sort_keys=False, default_flow_style=False, width=120)
             temp_path = f.name
-            print(temp_path)
+            logger.info(temp_path)
 
         # 执行部署命令
         cmd = ["obd", "cluster", "deploy", cluster_name, "-c", temp_path]
@@ -304,13 +304,17 @@ def start_oceanbase_cluster(cluster_name: str):
     }
     """
     # 构造命令参数（避免shell注入风险）
-    cmd = ["obd", "cluster", "start", cluster_name]
-    result = execute_shell_command(cmd)
-
-    if result["success"]:
-        return f"✅ Cluster '{cluster_name}' started successfully\nOutput: {result['output']}"
+    cmd = "ulimit -u 120000 && obd cluster start " + cluster_name
+    result = subprocess.run(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
+    # result = execute_shell_command(cmd)
+    if result.returncode == 0:
+        return (
+            f"✅ Cluster '{cluster_name}' started successfully\nOutput: {result.stdout}"
+        )
     else:
-        return f"❌ Failed to start cluster '{cluster_name}'\nError: {result['error']}"
+        return f"❌ Failed to start cluster '{cluster_name}'\nError: {result.stderr}"
 
 
 def check_oceanbase_cluster_status(cluster_name: str):
@@ -391,6 +395,7 @@ def is_obd_available():
         # 使用subprocess运行obd --version命令
         # 设置stdout和stderr为DEVNULL以避免输出干扰
         # check=True会在返回码非零时抛出CalledProcessError异常
+        os.environ["HOME"] = "/" + os.getlogin()
         subprocess.run(
             ["obd", "--version"],
             stdout=subprocess.DEVNULL,
