@@ -356,6 +356,47 @@ async def list_tools() -> list[types.Tool]:
                 "required": [],
             },
         ),
+        types.Tool(  # https://www.oceanbase.com/docs/community-obd-cn-1000000002023439
+            name="create_tenant_via_obd",
+            description="使用OBD的方式安装oceanbase(简称ob)时需要用到,创建租户,这是使用OBD的方式安装oceanbase的第六个需要调用的工具",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "cluster_name": {
+                        "type": "string",
+                        "description": "从第三步拿到的cluster_name",
+                    },
+                    "tenant_name": {
+                        "type": "string",
+                        "description": "租户名。",
+                    },
+                    "max_cpu": {
+                        "type": "string",
+                        "description": "租户可用最大 CPU 数。为 0 时使用集群剩余全部可用 CPU。",
+                    },
+                    "memory_size": {
+                        "type": "string",
+                        "description": "租户可用内存单元大小，仅支持 OceanBase 数据库 V4.0.0.0 及以上版本。",
+                    },
+                    "log_disk_size": {
+                        "type": "string",
+                        "description": "指定租户的 Unit 日志盘大小。默认值为 3 倍的内存规格值。最小值为 2G。",
+                    },
+                    "optimize": {
+                        "type": "string",
+                        "description": """
+                                        设置租户负载类型，未设置的情况下，会提供交互式选项供用户选择负载类型。可选值如下：
+                                        express_oltp：适用于贸易、支付核心系统、互联网高吞吐量应用程序等工作负载。没有外键等限制、没有存储过程、没有长交易、没有大交易、没有复杂的连接、没有复杂的子查询。
+                                        complex_oltp：适用于银行、保险系统等工作负载。他们通常具有复杂的联接、复杂的相关子查询、用 PL 编写的批处理作业，以及长事务和大事务。有时对短时间运行的查询使用并行执行。
+                                        olap：适用于实时数据仓库分析场景。
+                                        htap：适用于混合 OLAP 和 OLTP 工作负载。通常用于从活动运营数据、欺诈检测和个性化建议中获取即时见解。
+                                        kv：适用于键值工作负载和类似 Hbase 的宽列工作负载，这些工作负载通常具有非常高的吞吐量并且对延迟敏感。
+                                      """,
+                    },
+                },
+                "required": ["tenant_name"],
+            },
+        ),
     ]
 
 
@@ -420,6 +461,23 @@ async def handle_call_tool(
                 raise ValueError("cluster_name is required")
             result = ob_install_function.check_oceanbase_cluster_status(
                 cluster_name=cluster_name
+            )
+            return [types.TextContent(type="text", text=str(result))]
+
+        elif name == "create_tenant_via_obd":
+            cluster_name = arguments.get("cluster_name")
+            if not cluster_name:
+                raise ValueError("cluster_name is required")
+            tenant_name = arguments.get("tenant_name")
+            if not tenant_name:
+                raise ValueError("tenant_name is required")
+            result = ob_install_function.create_tenant_via_obd(
+                deploy_name=cluster_name,
+                tenant_name=tenant_name,
+                max_cpu=arguments.get("max_cpu"),
+                memory_size=arguments.get("memory_size"),
+                log_disk_size=arguments.get("log_disk_size"),
+                optimize=arguments.get("optimize"),
             )
             return [types.TextContent(type="text", text=str(result))]
 
@@ -490,6 +548,7 @@ async def run_sse_async(args) -> None:
 
 
 async def main() -> None:
+    logger.info("Starting OceanBase install MCP server...")
     """Main entry point to run the MCP server."""
     # argparse是一个标准库,用于解析命令行参数
     import argparse
