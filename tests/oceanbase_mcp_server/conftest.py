@@ -1,7 +1,8 @@
 # tests/conftest.py
-import pytest
 import os
+
 import mysql.connector
+import pytest
 from mysql.connector import Error
 
 

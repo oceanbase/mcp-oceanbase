@@ -1,4 +1,4 @@
-from ocp_mcp_server.server import mcp
+from .server import mcp
 
 
 def main():

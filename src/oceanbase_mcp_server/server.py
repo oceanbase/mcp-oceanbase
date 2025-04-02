@@ -1,9 +1,12 @@
 import asyncio
 import logging
 import os
-from mysql.connector import connect, Error
+
+from dotenv import load_dotenv
 from mcp.server import Server
+from mcp.server.stdio import stdio_server
 from mcp.types import Resource, Tool, TextContent
+from mysql.connector import connect, Error
 from pydantic import AnyUrl
 
 # Configure logging
@@ -12,6 +15,8 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger("oceanbase_mcp_server")
+
+load_dotenv()
 
 
 def get_db_config():
@@ -97,7 +102,7 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="execute_sql",
-            description="Execute an SQL query on the OceanBase server",
+            description="Execute a SQL query on the OceanBase server",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -171,8 +176,6 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
 async def main():
     """Main entry point to run the MCP server."""
-    from mcp.server.stdio import stdio_server
-
     logger.info("Starting OceanBase MCP server...")
     config = get_db_config()
     logger.info(f"Database config: {config['host']}/{config['database']} as {config['user']}")

@@ -6,13 +6,9 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
-from functools import partial
-from urllib.parse import urlencode
 
 import requests
 from mcp.server.fastmcp import FastMCP
-from mcp.server.fastmcp.prompts import base
-from requests.models import PreparedRequest
 
 AK = os.getenv('AK')
 SK = os.getenv('SK')

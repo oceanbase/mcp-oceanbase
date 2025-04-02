@@ -74,6 +74,9 @@ cd mcp-oceanbase
 python -m venv venv
 source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 
+# Copy and modify .env
+cp .env.template .env
+
 # Install development dependencies
 pip install -r requirements-dev.txt
 
