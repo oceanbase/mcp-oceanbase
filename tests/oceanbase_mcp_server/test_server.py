@@ -34,11 +34,13 @@ async def test_call_tool_missing_query():
 # Skip database-dependent tests if no database connection
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    not all([
-        pytest.importorskip("mysql.connector"),
-        pytest.importorskip("oceanbase_mcp_server")
-    ]),
-    reason="OceanBase connection not available"
+    not all(
+        [
+            pytest.importorskip("mysql.connector"),
+            pytest.importorskip("oceanbase_mcp_server"),
+        ]
+    ),
+    reason="OceanBase connection not available",
 )
 async def test_list_resources():
     """Test listing resources (requires database connection)."""

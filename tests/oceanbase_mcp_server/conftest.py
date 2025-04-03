@@ -14,7 +14,7 @@ def oceanbase_connection():
             port=os.getenv("OB_PORT", "2881"),
             user=os.getenv("OB_USER", "root"),
             password=os.getenv("OB_PASSWORD", "testpassword"),
-            database=os.getenv("OB_DATABASE", "test_db")
+            database=os.getenv("OB_DATABASE", "test_db"),
         )
 
         if connection.is_connected():
