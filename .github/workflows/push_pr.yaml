@@ -34,4 +34,5 @@ jobs:
 
     - name: Code style check
       run: |
-        ruff check .
+        ruff check . 
+        ruff format . --check
