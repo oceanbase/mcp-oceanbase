@@ -2,21 +2,21 @@
 
 MCP Server for OCP (OceanBase Cloud Platform).
 
-English | [简体中文](README_CN.md)
+English | [简体中文](ocp_mcp_server_CN.md)
 
 ## Features
 
 This repository contains MCP Servers as following:
 
-| MCP Server           | Description      | 
-|----------------------|------------------|
+| MCP Server     | Description                                                                     | 
+|----------------|---------------------------------------------------------------------------------|
 | OCP MCP Server | A Model Context Protocol (MCP) server that enables secure interaction with OCP. |
 
 ## Usage
 
 To use with the MCP Client, it is necessary to utilize a client that supports Prompt, such as Claude Desktop. Before entering a request, you need to manually select the desired Prompt and then input your request.
 
-![](assets/ocp_claude.jpg)
+![](../src/ocp_mcp_server/assets/ocp_claude.jpg)
 
 Claude Desktop config  example:
 

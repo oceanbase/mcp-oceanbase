@@ -7,9 +7,11 @@ OceanBase 数据库及其工具的 MCP Server
 
 本仓库提供了如下 MCP Server：
 
-| MCP Server           | 描述                                  | 使用文档                               |
-|----------------------|-------------------------------------|------------------------------------|
-| OceanBase MCP Server | 一个可以和 OceanBase 数据库安全交互的MCP Server。 | [Doc](doc/oceanbase_mcp_server.md) |
+| MCP Server           | 描述                                                                              | 使用文档                               |
+|----------------------|---------------------------------------------------------------------------------|------------------------------------|
+| OceanBase MCP Server | 一个可以和 OceanBase 数据库安全交互的MCP Server。                                             | [Doc](doc/oceanbase_mcp_server.md) |
+| OCP MCP Server       | A Model Context Protocol (MCP) server that enables secure interaction with OCP. | [Doc](doc/ocp_mcp_server_CN.md)    |
+
 
 ## 社区
 
