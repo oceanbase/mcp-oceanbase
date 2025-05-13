@@ -154,12 +154,14 @@ source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
     { name = "mysql-connector-python" },
+    { name = "python-dotenv" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = ">=1.0.0" },
     { name = "mysql-connector-python", specifier = ">=9.1.0" },
+    { name = "python-dotenv" },
 ]
 
 [[package]]
