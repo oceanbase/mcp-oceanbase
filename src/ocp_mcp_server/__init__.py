@@ -1,4 +1,3 @@
-
 from ocp_mcp_server import server
 
 
@@ -9,5 +8,4 @@ def main():
 
 # Expose important items at package level
 
-__all__ = ['main','server']
-
+__all__ = ["main", "server"]
