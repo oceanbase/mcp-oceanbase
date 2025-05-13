@@ -19,6 +19,7 @@ build-backend = "hatchling.build"
 [tool.hatch.build]
 include = [
     "src/oceanbase_mcp_server/**/*.py",
+    "src/ocp_mcp_server/**/*.py"
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -28,3 +29,4 @@ packages = [
 
 [project.scripts]
 oceanbase_mcp_server = "oceanbase_mcp_server:main"
+ocp_mcp_server = "ocp_mcp_server:main"
