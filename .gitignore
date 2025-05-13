@@ -1,0 +1,69 @@
+# Byte-compiled Python files
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+node_modules/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Hatch-specific files
+.hatch/
+
+# IDE/editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment files
+venv/
+ENV/
+env/
+.venv/
+pip-wheel-metadata/
+
+# dotenv environment variables
+.env
+.env.local
+.env.*.local
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Testing and coverage
+.coverage
+.tox/
+.nox/
+htmlcov/
+coverage.xml
+pytest_cache/
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.tmp
+
+# Other temporary files
+*.swp
+*~

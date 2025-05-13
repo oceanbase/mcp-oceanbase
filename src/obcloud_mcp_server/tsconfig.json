@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "types": ["node"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "removeComments": true,
+    "pretty": false,
+    "stripInternal": true,
+    "newLine": "lf",
+    "typeRoots": ["./typing/*"]
+  },
+  "include": [
+    "src",
+    "src/typings.d.ts"
+  ],
+  "files": ["src/typings.d.ts"],
+  "exclude": [
+    "node_modules"
+  ]
+}

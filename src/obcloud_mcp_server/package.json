@@ -1,0 +1,38 @@
+{
+  "name": "@oceanbase/obcloud-mcp-server",
+  "version": "0.0.1",
+  "description": "MCP Cloud for OBCloud",
+  "main": "dist/index.js",
+  "bin": {
+    "oceanbase-mcp-server": "./dist/index.js"
+  },
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "start": "node build/index.js",
+    "watch": "tsc -w",
+    "dev": "npx @modelcontextprotocol/inspector ts-node ./src/index.ts",
+    "pub": "npm publish --registry https://registry.npmjs.org"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.2",
+    "axios": "^1.8.4",
+    "axios-cookiejar-support": "^5.0.5",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.0.3",
+    "mysql2": "^3.14.0",
+    "node-rsa": "^1.1.1",
+    "tough-cookie": "^5.1.2",
+    "urllib": "^4.6.11"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.11",
+    "@types/node-rsa": "^1.1.4",
+    "dotenv": "^16.5.0",
+    "typescript": "^5.0.4"
+  },
+  "repository": "git@code.alipay.com:oceanbase/mcp-server-oceanbase.git",
+  "publishConfig": {
+    "registry": "https://registry.antgroup-inc.cn"
+  }
+}

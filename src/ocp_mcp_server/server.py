@@ -6,19 +6,15 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
-from functools import partial
-from urllib.parse import urlencode
 
 import requests
 from mcp.server.fastmcp import FastMCP
-from mcp.server.fastmcp.prompts import base
-from requests.models import PreparedRequest
 
-AK = os.getenv('AK')
-SK = os.getenv('SK')
-ADDRESS = os.getenv('ADDRESS')
+AK = os.getenv("AK")
+SK = os.getenv("SK")
+ADDRESS = os.getenv("ADDRESS")
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-DOC_DIR = os.path.join(CURRENT_DIR,'ocp-doc-min')
+DOC_DIR = os.path.join(CURRENT_DIR, "ocp-doc-min")
 
 mcp = FastMCP("ocp_mcp_server")
 
@@ -56,13 +52,12 @@ def system_prompt():
     """
 
 
-def _gen_prompt(doc_path:str): 
-
+def _gen_prompt(doc_path: str):
     descriptions = []
 
     # 确保 prompt 目录存在
     if not os.path.exists(doc_path):
-        raise Exception('Doc path do not exists:' + str(doc_path))
+        raise Exception("Doc path do not exists:" + str(doc_path))
 
     if os.path.isfile(doc_path):
         with open(doc_path, "r", encoding="utf-8") as f:
@@ -78,16 +73,19 @@ def _gen_prompt(doc_path:str):
     # 用换行符连接所有文件内容
     return "\n".join(descriptions)
 
+
 @mcp.prompt()
 def ocp_api_all_description():
     """获取 OCP 所有 API 描述文档，精简版"""
 
     return _gen_prompt(DOC_DIR)
 
+
 @mcp.prompt()
 def ocp_api_cluster_description():
     """获取 OCP 集群 API 描述文档"""
-    return _gen_prompt(DOC_DIR + '/3.cluster-information.md')
+    return _gen_prompt(DOC_DIR + "/3.cluster-information.md")
+
 
 @mcp.prompt()
 def ocp_api_monitor_description():
@@ -98,27 +96,32 @@ def ocp_api_monitor_description():
     - [!必须]metricsWithLabel 的 query_param 参数中的 labels,groupBy 需要根据 metricGroups 的返回结果填写。
     - [!必须]如果用户要求的指标有多个相似的指标项，你应当列出这些指标，让用户进一步明确想要的指标。
     """
-    return _gen_prompt(DOC_DIR + '/8.monitoring.md') + '\n' + extra_prompt
+    return _gen_prompt(DOC_DIR + "/8.monitoring.md") + "\n" + extra_prompt
+
 
 @mcp.prompt()
 def ocp_api_tenant_description():
     """获取 OCP 租户 API 描述文档"""
-    return _gen_prompt(DOC_DIR + '/4.tenant-information.md')
+    return _gen_prompt(DOC_DIR + "/4.tenant-information.md")
+
 
 @mcp.prompt()
 def ocp_api_sql_performance_description():
     """获取 OCP SQL 性能 API 描述文档"""
-    return _gen_prompt(DOC_DIR + '/14.sql-performance.md')
+    return _gen_prompt(DOC_DIR + "/14.sql-performance.md")
+
 
 @mcp.prompt()
 def ocp_api_user_description():
     """获取 OCP 数据库用户 API 描述文档"""
-    return _gen_prompt(DOC_DIR + '/12.ob-user-and-permission-management.md')
+    return _gen_prompt(DOC_DIR + "/12.ob-user-and-permission-management.md")
+
 
 @mcp.prompt()
 def ocp_api_backup_restore_description():
     """获取 OCP 备份恢复 API 描述文档"""
-    return _gen_prompt(DOC_DIR + '/15.backup-and-restore.md')
+    return _gen_prompt(DOC_DIR + "/15.backup-and-restore.md")
+
 
 @mcp.tool()
 def query_ocp_api(
@@ -144,7 +147,7 @@ def query_ocp_api(
         str: API 响应的 JSON 字符串
     """
     request_time = gen_rfc_time()
-    
+
     # 处理查询参数
     param_str = ""
     if query_param:
@@ -153,22 +156,22 @@ def query_ocp_api(
         for key, value in query_param.items():
             if isinstance(value, (list, tuple)):
                 # 将列表转换为逗号分隔的字符串
-                flat_params[key] = ','.join(map(str, value))
+                flat_params[key] = ",".join(map(str, value))
             else:
                 flat_params[key] = str(value)
-        
+
         # 按键排序并进行 URL 编码
         sorted_params = []
         for key in sorted(flat_params.keys()):
-            encoded_key = requests.utils.quote(key, safe='')
-            encoded_value = requests.utils.quote(flat_params[key], safe='')
+            encoded_key = requests.utils.quote(key, safe="")
+            encoded_value = requests.utils.quote(flat_params[key], safe="")
             sorted_params.append(f"{encoded_key}={encoded_value}")
-        
+
         param_str = "?" + "&".join(sorted_params)
-    
+
     # 构建签名字符串
     path_with_query = request_path + param_str
-    
+
     query_body = "\n".join(
         [
             method,
@@ -180,21 +183,21 @@ def query_ocp_api(
             path_with_query,
         ]
     )
-    
+
     print(query_body)  # 用于调试
     signature = generate_signature(SK, query_body)
-    
+
     headers = {
         "Authorization": f"OCP-ACCESS-KEY-HMACSHA1 {AK}:{signature}",
         "Date": request_time,
         "x-ocp-origin": ocp_header,
         "Content-Type": protocal,
     }
-    
+
     url = "http://" + ADDRESS + path_with_query
     logging.info("request url:" + url)
     logging.info("request headers:" + str(headers))
-    
+
     response = requests.get(url, headers=headers)
     try:
         result = json.dumps(response.json())
