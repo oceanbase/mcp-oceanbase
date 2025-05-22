@@ -168,7 +168,30 @@ def call_tool(query: str) -> str:
         logger.error(f"Error executing SQL '{query}': {e}")
         return f"Error executing query: {str(e)}"
 
+@app.tool(name="get_ob_ash_report",description="Get OceanBase Active Session History report")
+def get_ob_ash_report(
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    tenant_id: Optional[str] = None,
+) -> str:
+    config = configure_db_connection()
+    logger.info(f"Calling tool: get_ob_ash_report  with arguments: {start_time}, {end_time}, {tenant_id}")
 
+    # Construct the SQL query
+    sql_query = f"""
+        CALL DBMS_WORKLOAD_REPOSITORY.ASH_REPORT({start_time}, {end_time}, NULL, NULL, NULL, 'HTML', NULL, NULL, {tenant_id});
+    """
+    try:
+        with connect(**config) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(sql_query)
+                result = cursor.fetchall()
+                logger.info(f"ASH report result: {result}")
+                return result
+    except Error as e:
+        logger.error(f"Error executing SQL '{sql_query}': {e}")
+        return f"Error executing query: {str(e)}"
+    
 def main(transport: Literal["stdio", "sse"] = "stdio"):
     """Main entry point to run the MCP server."""
     logger.info(f"Starting OceanBase MCP server with {transport} mode...")
