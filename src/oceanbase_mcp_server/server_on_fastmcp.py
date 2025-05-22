@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from typing import Literal, Optional, Dict
 
 from dotenv import load_dotenv
@@ -107,7 +108,7 @@ def configure_db_connection(
     logger.info(
         "Database configuration loaded successfully: host=%s, port=%d, user=%s, database=%s",
         config["host"],
-        config["port"],
+        int(config["port"]),
         config["user"],
         config["database"],
     )
@@ -168,18 +169,24 @@ def call_tool(query: str) -> str:
         logger.error(f"Error executing SQL '{query}': {e}")
         return f"Error executing query: {str(e)}"
 
-@app.tool(name="get_ob_ash_report",description="Get OceanBase Active Session History report")
+
+@app.tool(
+    name="get_ob_ash_report", description="Get OceanBase Active Session History report"
+)
 def get_ob_ash_report(
-    start_time: Optional[str] = None,
-    end_time: Optional[str] = None,
+    start_time: str = None,
+    end_time: str = None,
     tenant_id: Optional[str] = None,
 ) -> str:
     config = configure_db_connection()
-    logger.info(f"Calling tool: get_ob_ash_report  with arguments: {start_time}, {end_time}, {tenant_id}")
-
+    logger.info(
+        f"Calling tool: get_ob_ash_report  with arguments: {start_time}, {end_time}, {tenant_id}"
+    )
+    if tenant_id is None:
+        tenant_id = "NULL"
     # Construct the SQL query
     sql_query = f"""
-        CALL DBMS_WORKLOAD_REPOSITORY.ASH_REPORT({start_time}, {end_time}, NULL, NULL, NULL, 'HTML', NULL, NULL, {tenant_id});
+        CALL DBMS_WORKLOAD_REPOSITORY.ASH_REPORT('{start_time}','{end_time}', NULL, NULL, NULL, 'TEXT', NULL, NULL, {tenant_id});
     """
     try:
         with connect(**config) as conn:
@@ -191,7 +198,16 @@ def get_ob_ash_report(
     except Error as e:
         logger.error(f"Error executing SQL '{sql_query}': {e}")
         return f"Error executing query: {str(e)}"
-    
+
+
+@app.tool(name="get_current_time", description="Get current time")
+def get_current_time() -> str:
+    local_time = time.localtime()
+    formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
+    logger.info(f"Current time: {formatted_time}")
+    return formatted_time
+
+
 def main(transport: Literal["stdio", "sse"] = "stdio"):
     """Main entry point to run the MCP server."""
     logger.info(f"Starting OceanBase MCP server with {transport} mode...")
