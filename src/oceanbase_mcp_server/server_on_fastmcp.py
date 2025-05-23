@@ -26,7 +26,7 @@ def table_sample(table: str) -> str:
     try:
         with connect(**config) as conn:
             with conn.cursor() as cursor:
-                cursor.execute(f"SELECT * FROM {table} LIMIT 100")
+                cursor.execute("SELECT * FROM `%s` LIMIT 100", params=(table,))
                 columns = [desc[0] for desc in cursor.description]
                 rows = cursor.fetchall()
                 result = [",".join(map(str, row)) for row in rows]

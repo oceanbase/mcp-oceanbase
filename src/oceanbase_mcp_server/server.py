@@ -57,10 +57,10 @@ async def list_resources() -> list[Resource]:
                 for table in tables:
                     resources.append(
                         Resource(
-                            uri=f"oceanbase://{table[0]}/data",
+                            uri=AnyUrl(f"oceanbase://sample/{table[0]}"),
                             name=f"Table: {table[0]}",
                             mimeType="text/plain",
-                            description=f"Data in table: {table[0]}",
+                            description=f"Sample of table: {table[0]}",
                         )
                     )
                 return resources
@@ -75,17 +75,18 @@ async def read_resource(uri: AnyUrl) -> str:
     config = get_db_config()
     uri_str = str(uri)
     logger.info(f"Reading resource: {uri_str}")
+    prefix = "oceanbase://"
 
-    if not uri_str.startswith("oceanbase://"):
+    if not uri_str.startswith(prefix):
         raise ValueError(f"Invalid URI scheme: {uri_str}")
 
-    parts = uri_str[8:].split("/")
-    table = parts[0]
+    parts = uri_str[len(prefix) :].split("/")
+    table = parts[1]
 
     try:
         with connect(**config) as conn:
             with conn.cursor() as cursor:
-                cursor.execute(f"SELECT * FROM {table} LIMIT 100")
+                cursor.execute("SELECT * FROM `%s` LIMIT 100", (table,))
                 columns = [desc[0] for desc in cursor.description]
                 rows = cursor.fetchall()
                 result = [",".join(map(str, row)) for row in rows]
