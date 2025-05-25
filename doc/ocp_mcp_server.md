@@ -36,4 +36,4 @@ Contact the developers and community at [https://ask.oceanbase.com](https://ask.
 
 ## Licensing
 
-See [LICENSE](LICENSE) for more information.
+See [LICENSE](../LICENSE) for more information.

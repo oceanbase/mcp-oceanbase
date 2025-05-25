@@ -1,4 +1,5 @@
 # mcp-oceanbase
+
 OCP (OceanBase Cloud Platform) MCP Server.
 
 [English](ocp_mcp_server.md) | 简体中文
@@ -33,4 +34,4 @@ Claude Desktop config  example:
 
 ## 许可证
 
-更多信息见 [LICENSE](LICENSE)。
+更多信息见 [LICENSE](../LICENSE)。
