@@ -8,10 +8,10 @@ from . import sql
 from . import install
 
 __all__ = [
-    'backup_policy',
-    'clusters',
-    'components',
-    'tenants',
-    'sql',
-    'install',
+    "backup_policy",
+    "clusters",
+    "components",
+    "tenants",
+    "sql",
+    "install",
 ]

@@ -42,7 +42,9 @@ def show_cluster(cluster_name: str, namespace: str = "default"):
         return "必须指定集群名称"
     try:
         cmd = f"okctl cluster show {cluster_name} -n {namespace}"
-        result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return format_error(e)
@@ -63,7 +65,9 @@ def scale_cluster(cluster_name: str, zones: str, namespace: str = "default"):
         return "必须指定集群名称和可用区"
     try:
         cmd = f"okctl cluster scale {cluster_name} -n {namespace} --zones={zones}"
-        result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return format_error(e)
@@ -121,7 +125,9 @@ def update_cluster(
         if redo_log_storage_size:
             cmd += f" --redo-log-storage-size {redo_log_storage_size}"
 
-        result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return format_error(e)
@@ -142,7 +148,9 @@ def upgrade_cluster(cluster_name: str, image: str, namespace: str = "default"):
         return "必须指定集群名称和镜像"
     try:
         cmd = f"okctl cluster upgrade {cluster_name} -n {namespace} --image {image}"
-        result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return format_error(e)
@@ -160,7 +168,9 @@ def delete_cluster(cluster_name: str, namespace: str = "default"):
         return "必须指定集群名称"
     try:
         cmd = f"okctl cluster delete {cluster_name} -n {namespace}"
-        result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return format_error(e)
@@ -278,7 +288,9 @@ async def create_cluster(
                 stderr=asyncio.subprocess.PIPE,
             )
             check_stdout_bytes, _ = await check_process.communicate()
-            check_stdout = check_stdout_bytes.decode("utf-8") if check_stdout_bytes else ""
+            check_stdout = (
+                check_stdout_bytes.decode("utf-8") if check_stdout_bytes else ""
+            )
 
             if "running" in check_stdout.lower():
                 result += f"\n集群 {cluster_name} 已成功创建并准备就绪！"

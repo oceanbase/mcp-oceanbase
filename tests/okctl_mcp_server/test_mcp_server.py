@@ -54,5 +54,6 @@ async def test_call_tool_missing_args():
 
     error_msg = str(exc_info.value)
     assert any(
-        expected in error_msg for expected in ["Missing required argument", "Field required"]
+        expected in error_msg
+        for expected in ["Missing required argument", "Field required"]
     ), f"Unexpected error message: {error_msg}"

@@ -6,7 +6,9 @@ from okctl_mcp_server.utils.errors import format_error
 from okctl_mcp_server import mcp
 
 # 设置日志
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +35,9 @@ def check_kubernetes_available() -> bool:
         bool: Kubernetes是否可用
     """
     try:
-        result = subprocess.run(["kubectl", "version", "--client"], capture_output=True, text=True)
+        result = subprocess.run(
+            ["kubectl", "version", "--client"], capture_output=True, text=True
+        )
         return result.returncode == 0
     except Exception:
         return False

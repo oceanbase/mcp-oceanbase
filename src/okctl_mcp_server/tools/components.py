@@ -33,7 +33,9 @@ def install_component(
         if version:
             cmd += f" --version {version}"
 
-        result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return format_error(e)
@@ -59,7 +61,9 @@ def update_component(
     try:
         cmd = f"okctl update {component_name}"
 
-        result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return format_error(e)

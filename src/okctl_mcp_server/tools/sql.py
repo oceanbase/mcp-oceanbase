@@ -9,7 +9,9 @@ from okctl_mcp_server.utils.errors import format_error
 from okctl_mcp_server import mcp
 
 # 配置日志
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("okctl_mcp_server")
 
 # 全局配置
@@ -47,7 +49,9 @@ def configure_cluster_connection(
     try:
         # 首先确认集群存在
         cmd_check = f"okctl cluster show {cluster_name} -n {namespace}"
-        result_check = subprocess.run(["sh", "-c", cmd_check], capture_output=True, text=True)
+        result_check = subprocess.run(
+            ["sh", "-c", cmd_check], capture_output=True, text=True
+        )
         if "not found" in result_check.stderr:
             raise ValueError(f"集群 {cluster_name} 不存在")
 
@@ -79,11 +83,15 @@ def configure_cluster_connection(
 
         # 如果指定了zone，验证其是否存在
         if zone and zone not in zones:
-            raise ValueError(f"指定的可用区 {zone} 不存在于集群 {cluster_name} 中。可用的区域: {', '.join(zones)}")
+            raise ValueError(
+                f"指定的可用区 {zone} 不存在于集群 {cluster_name} 中。可用的区域: {', '.join(zones)}"
+            )
 
         # 使用 kubectl 命令获取所有 pod 信息
         cmd = "kubectl get pods -o wide"
-        result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["sh", "-c", cmd], capture_output=True, text=True, check=True
+        )
 
         if not result.stdout.strip():
             raise ValueError("未找到任何 POD 信息")
@@ -107,7 +115,9 @@ def configure_cluster_connection(
 
         # 获取第一个 pod 的 IP 地址
         ip_address = pod_data[0]["pod_ip"]
-        logger.info(f"获取到集群IP地址: {ip_address}，来自POD: {pod_data[0]['pod_name']}，可用区: {target_zone}")
+        logger.info(
+            f"获取到集群IP地址: {ip_address}，来自POD: {pod_data[0]['pod_name']}，可用区: {target_zone}"
+        )
 
         # 如果没有提供密码, 则从环境变量中获取集群密码
         if not password:
@@ -126,7 +136,9 @@ def configure_cluster_connection(
             "password": password,
         }
 
-        logger.info(f"数据库连接配置成功: host={ip_address}, port={port}, user={user}, tenant_name={tenant_name}")
+        logger.info(
+            f"数据库连接配置成功: host={ip_address}, port={port}, user={user}, tenant_name={tenant_name}"
+        )
 
         return global_config
     except subprocess.CalledProcessError as e:
@@ -135,7 +147,9 @@ def configure_cluster_connection(
         raise ValueError(f"获取集群IP地址失败: {error_msg}")
     except Exception as e:
         logger.error(f"配置数据库连接时发生错误: {str(e)}")
-        raise ValueError(f"配置数据库连接时发生错误: {str(e)}, 目前连接配置为: {global_config}")
+        raise ValueError(
+            f"配置数据库连接时发生错误: {str(e)}, 目前连接配置为: {global_config}"
+        )
 
 
 @mcp.tool()
@@ -218,5 +232,7 @@ def execute_cluster_sql(
         logger.error(f"执行SQL '{query}'时出错: {e}")
         return f"执行查询时出错: {str(e)}，SQL语句为: {query}"
     except Exception as e:
-        logger.error(f"执行查询时发生未知错误: {str(e)}，目前连接配置为: {global_config}，SQL语句为: {query}")
+        logger.error(
+            f"执行查询时发生未知错误: {str(e)}，目前连接配置为: {global_config}，SQL语句为: {query}"
+        )
         return f"执行查询时发生未知错误: {str(e)}, 目前连接配置为: {global_config}，SQL语句为: {query}"

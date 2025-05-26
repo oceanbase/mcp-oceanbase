@@ -17,7 +17,9 @@ def system_prompt() -> str:
 
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("okctl_mcp_server")
 
 
@@ -37,9 +39,15 @@ def load_tools(tool_names: List[str]) -> None:
 
 def main() -> None:
     """Main entry point for the MCP server."""
-    parser = argparse.ArgumentParser(description="OceanBase cluster management tool MCP server")
-    parser.add_argument("--use-sse", action="store_true", help="Use Server-Sent Events (SSE) transport")
-    parser.add_argument("--port", type=int, default=8000, help="Port for SSE transport (default: 8000)")
+    parser = argparse.ArgumentParser(
+        description="OceanBase cluster management tool MCP server"
+    )
+    parser.add_argument(
+        "--use-sse", action="store_true", help="Use Server-Sent Events (SSE) transport"
+    )
+    parser.add_argument(
+        "--port", type=int, default=8000, help="Port for SSE transport (default: 8000)"
+    )
     parser.add_argument(
         "--tools",
         type=str,
@@ -52,7 +60,9 @@ def main() -> None:
     if args.tools.lower() == "all":
         # 加载所有工具模块
         logger.info("启用所有工具")
-        load_tools(["clusters", "tenants", "backup_policy", "components", "sql", "install"])
+        load_tools(
+            ["clusters", "tenants", "backup_policy", "components", "sql", "install"]
+        )
     else:
         # 解析工具参数
         tool_modules = [module.strip().lower() for module in args.tools.split(",")]
