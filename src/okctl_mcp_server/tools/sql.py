@@ -82,11 +82,11 @@ def configure_cluster_connection(
             raise ValueError(f"指定的可用区 {zone} 不存在于集群 {cluster_name} 中。可用的区域: {', '.join(zones)}")
 
         # 使用 kubectl 命令获取所有 pod 信息
-        cmd = f"kubectl get pods -o wide"
+        cmd = "kubectl get pods -o wide"
         result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
 
         if not result.stdout.strip():
-            raise ValueError(f"未找到任何 POD 信息")
+            raise ValueError("未找到任何 POD 信息")
 
         # 解析 POD 信息，根据指定的zone筛选pod
         pod_info = result.stdout.strip().split("\n")

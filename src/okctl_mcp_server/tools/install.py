@@ -1,5 +1,4 @@
 import subprocess
-from typing import Optional, List, Dict, Any, Union, Tuple
 import logging
 from okctl_mcp_server.utils.errors import format_error
 
@@ -76,12 +75,12 @@ def install_okctl():
 
         logger.info("正在安装okctl...")
         cmd = "curl -sL https://raw.githubusercontent.com/oceanbase/ob-operator/master/scripts/install-okctl.sh | bash && chmod +x ./okctl && mv ./okctl /usr/local/bin"
-        result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
         logger.info("okctl安装完成")
         return "okctl安装完成"
     except subprocess.CalledProcessError as e:
         error_msg = format_error(e)
-        logger.error(f"安装okctl失败: {error_msg}")
+        logger.error("安装okctl失败: %s", error_msg)
         return f"安装okctl失败: {error_msg}"
 
 
@@ -95,12 +94,12 @@ def install_ob_operator():
 
         logger.info("正在安装ob-operator...")
         cmd = "kubectl apply -f https://raw.githubusercontent.com/oceanbase/ob-operator/stable/deploy/operator.yaml"
-        result = subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
+        subprocess.run(["sh", "-c", cmd], capture_output=True, text=True, check=True)
         logger.info("ob-operator安装完成")
         return "ob-operator安装完成"
     except subprocess.CalledProcessError as e:
         error_msg = format_error(e)
-        logger.error(f"安装ob-operator失败: {error_msg}")
+        logger.error("安装ob-operator失败: %s", error_msg)
         return f"安装ob-operator失败: {error_msg}"
 
 

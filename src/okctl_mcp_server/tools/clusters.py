@@ -1,6 +1,5 @@
 import subprocess
 import asyncio
-import re
 from typing import Optional
 from okctl_mcp_server.utils.errors import format_error
 
@@ -278,16 +277,12 @@ async def create_cluster(
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            check_stdout_bytes, check_stderr_bytes = await check_process.communicate()
+            check_stdout_bytes, _ = await check_process.communicate()
             check_stdout = check_stdout_bytes.decode("utf-8") if check_stdout_bytes else ""
 
-            # 查找集群的主Pod（格式如：test2-1746509963-z1-gz4729）
-            pod_pattern = re.compile(f"{cluster_name}-\d+-z\d+-\w+")
-            # 查找check_stdout中是否是running状态
             if "running" in check_stdout.lower():
                 result += f"\n集群 {cluster_name} 已成功创建并准备就绪！"
                 return result
-            # 如果还没准备好，等待一段时间后重试
             if i < max_retries - 1:
                 await asyncio.sleep(retry_interval)
         # 如果达到最大重试次数仍未就绪

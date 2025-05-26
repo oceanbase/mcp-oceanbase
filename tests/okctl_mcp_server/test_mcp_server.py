@@ -5,11 +5,13 @@ from mcp.types import Tool
 from okctl_mcp_server import mcp
 
 # Register all tools
-from okctl_mcp_server.tools import (
+from okctl_mcp_server.tools import (  # noqa: F401
     backup_policy,
     clusters,
     components,
     tenants,
+    sql,
+    install,
 )
 
 
