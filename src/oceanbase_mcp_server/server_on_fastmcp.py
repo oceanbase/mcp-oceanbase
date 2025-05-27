@@ -1,11 +1,11 @@
 import logging
 import os
 import time
-from typing import Literal, Optional, Dict
+from typing import Dict, Literal, Optional
 
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
-from mysql.connector import connect, Error
+from mysql.connector import Error, connect
 
 # Configure logging
 logging.basicConfig(
@@ -117,11 +117,9 @@ def configure_db_connection(
     return global_config
 
 
-@app.tool(
-    name="execute_sql", description="Execute an SQL query on the OceanBase server"
-)
-def call_tool(query: str) -> str:
-    """Execute SQL commands."""
+@app.tool()
+def execute_sql(query: str) -> str:
+    """Execute an SQL query on the OceanBase server."""
     config = configure_db_connection()
     logger.info(f"Calling tool: execute_sql  with arguments: {query}")
 
@@ -158,6 +156,11 @@ def call_tool(query: str) -> str:
                     result = [",".join(map(str, row)) for row in rows]
                     return "\n".join([",".join(columns)] + result)
 
+                # Regular SHOW queries
+                elif query.strip().upper().startswith("SHOW"):
+                    rows = cursor.fetchall()
+                    return rows
+
                 # Non-SELECT queries
                 else:
                     conn.commit()
@@ -170,14 +173,22 @@ def call_tool(query: str) -> str:
         return f"Error executing query: {str(e)}"
 
 
-@app.tool(
-    name="get_ob_ash_report", description="Get OceanBase Active Session History report"
-)
+@app.tool()
 def get_ob_ash_report(
     start_time: str,
     end_time: str,
     tenant_id: Optional[str] = None,
 ) -> str:
+    """
+    Get OceanBase Active Session History report.
+    ASH can sample the status of all Active Sessions in the system at 1-second intervals, including:
+        Current executing SQL ID
+        Current wait events (if any)
+        Wait time and wait parameters
+        The module where the SESSION is located during sampling (PARSE, EXECUTE, PL, etc.)
+        SESSION status records, such as SESSION MODULE, ACTION, CLIENT ID
+    This will be very useful when you perform performance analysis.RetryClaude can make mistakes. Please double-check responses.
+    """
     config = configure_db_connection()
     logger.info(
         f"Calling tool: get_ob_ash_report  with arguments: {start_time}, {end_time}, {tenant_id}"
@@ -210,6 +221,55 @@ def get_current_time() -> str:
     logger.info(f"Current time: {formatted_time}")
     return formatted_time
 
+@app.tool()
+def get_current_tenant() -> str:
+    """
+    Get the current tenant name from oceanbase.
+    """
+    logger.info(f"Calling tool: get_current_tenant")
+    sql_query = "show tenant"
+    try:
+        result = execute_sql(sql_query)
+        logger.info(f"Current tenant: {result}")
+        return result[0][0]
+    except Error as e:
+        logger.error(f"Error executing SQL '{sql_query}': {e}")
+        return f"Error executing query: {str(e)}"
+
+@app.tool()
+def get_all_server_nodes():
+    """
+    Get all server nodes from oceanbase.
+    You need to be sys tenant to get all server nodes.
+    """
+    tenant = get_current_tenant()
+    if tenant != 'sys':
+        raise ValueError("Only sys tenant can get all server nodes")
+
+    logger.info(f"Calling tool: get_all_server_nodes")
+    sql_query = "select * from DBA_OB_SERVERS"
+    try:
+        return execute_sql(sql_query)
+    except Error as e:
+        logger.error(f"Error executing SQL '{sql_query}': {e}")
+        return f"Error executing query: {str(e)}"
+
+@app.tool()
+def get_resource_capacity():
+    """
+    Get resource capacity from oceanbase.
+    You need to be sys tenant to get resource capacity.
+    """
+    tenant = get_current_tenant()
+    if tenant!='sys':
+        raise ValueError("Only sys tenant can get resource capacity")
+    logger.info(f"Calling tool: get_resource_capacity")
+    sql_query = "select * from oceanbase.GV$OB_SERVERS"
+    try:
+        return execute_sql(sql_query)
+    except Error as e:
+        logger.error(f"Error executing SQL '{sql_query}': {e}")
+        return f"Error executing query: {str(e)}"
 
 def main(transport: Literal["stdio", "sse"] = "stdio"):
     """Main entry point to run the MCP server."""
