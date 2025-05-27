@@ -1,20 +1,11 @@
 import pytest
 
-from oceanbase_mcp_server.server import app, list_tools, list_resources, call_tool
+from oceanbase_mcp_server.server_on_fastmcp import app, call_tool
 
 
 def test_server_initialization():
     """Test that the server initializes correctly."""
     assert app.name == "oceanbase_mcp_server"
-
-
-@pytest.mark.asyncio
-async def test_list_tools():
-    """Test that list_tools returns expected tools."""
-    tools = await list_tools()
-    assert len(tools) == 1
-    assert tools[0].name == "execute_sql"
-    assert "query" in tools[0].inputSchema["properties"]
 
 
 @pytest.mark.asyncio
@@ -42,12 +33,3 @@ async def test_call_tool_missing_query():
     ),
     reason="OceanBase connection not available",
 )
-async def test_list_resources():
-    """Test listing resources (requires database connection)."""
-    try:
-        resources = await list_resources()
-        assert isinstance(resources, list)
-    except ValueError as e:
-        if "Missing required database configuration" in str(e):
-            pytest.skip("Database configuration not available")
-        raise
