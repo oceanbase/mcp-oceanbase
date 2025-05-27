@@ -211,7 +211,7 @@ def get_current_time() -> str:
     return formatted_time
 
 
-def main(transport: Literal["stdio", "sse"] = "stdio",port: int=8000):
+def main(transport: Literal["stdio", "sse"] = "stdio", port: int = 8000):
     """Main entry point to run the MCP server."""
     logger.info(f"Starting OceanBase MCP server with {transport} mode...")
     app.settings.port = port
