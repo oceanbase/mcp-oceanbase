@@ -1,4 +1,4 @@
-from . import server_on_fastmcp
+from . import server
 import argparse
 
 
@@ -14,10 +14,10 @@ def main():
     parser.add_argument("--port", type=int, default=8000, help="SSE Port to listen on")
     args = parser.parse_args()
     if args.transport == "stdio":
-        server_on_fastmcp.main()
+        server.main()
     else:
-        server_on_fastmcp.main(transport="sse", port=args.port)
+        server.main(transport="sse", port=args.port)
 
 
 # Expose important items at package level
-__all__ = ["main", "server_on_fastmcp"]
+__all__ = ["main", "server"]
