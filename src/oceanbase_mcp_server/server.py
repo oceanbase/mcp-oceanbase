@@ -1,13 +1,11 @@
-import asyncio
 import logging
 import os
+import time
+from typing import Dict, Literal, Optional
 
 from dotenv import load_dotenv
-from mcp.server import Server
-from mcp.server.stdio import stdio_server
-from mcp.types import Resource, Tool, TextContent
-from mysql.connector import connect, Error
-from pydantic import AnyUrl
+from mcp.server.fastmcp import FastMCP
+from mysql.connector import Error, connect
 
 # Configure logging
 logging.basicConfig(
@@ -16,121 +14,114 @@ logging.basicConfig(
 logger = logging.getLogger("oceanbase_mcp_server")
 
 load_dotenv()
-
-
-def get_db_config():
-    """Get database configuration from environment variables."""
-    config = {
-        "host": os.getenv("OB_HOST", "localhost"),
-        "port": int(os.getenv("OB_PORT", "2881")),
-        "user": os.getenv("OB_USER"),
-        "password": os.getenv("OB_PASSWORD"),
-        "database": os.getenv("OB_DATABASE"),
-    }
-
-    if not all([config["user"], config["password"], config["database"]]):
-        logger.error(
-            "Missing required database configuration. Please check environment variables:"
-        )
-        logger.error("OB_USER, OB_PASSWORD, and OB_DATABASE are required")
-        raise ValueError("Missing required database configuration")
-
-    return config
-
+global_config = None
 
 # Initialize server
-app = Server("oceanbase_mcp_server")
+app = FastMCP("oceanbase_mcp_server")
 
 
-@app.list_resources()
-async def list_resources() -> list[Resource]:
+@app.resource("oceanbase://sample/{table}", description="table sample")
+def table_sample(table: str) -> str:
+    config = configure_db_connection()
+    try:
+        with connect(**config) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM `%s` LIMIT 100", params=(table,))
+                columns = [desc[0] for desc in cursor.description]
+                rows = cursor.fetchall()
+                result = [",".join(map(str, row)) for row in rows]
+                return "\n".join([",".join(columns)] + result)
+
+    except Error:
+        return f"Failed to sample table: {table}"
+
+
+@app.resource("oceanbase://tables", description="list all tables")
+def list_tables() -> str:
     """List OceanBase tables as resources."""
-    config = get_db_config()
+    config = configure_db_connection()
     try:
         with connect(**config) as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SHOW TABLES")
                 tables = cursor.fetchall()
                 logger.info(f"Found tables: {tables}")
-
-                resources = []
-                for table in tables:
-                    resources.append(
-                        Resource(
-                            uri=AnyUrl(f"oceanbase://sample/{table[0]}"),
-                            name=f"Table: {table[0]}",
-                            mimeType="text/plain",
-                            description=f"Sample of table: {table[0]}",
-                        )
-                    )
-                return resources
-    except Error as e:
-        logger.error(f"Failed to list resources: {str(e)}")
-        return []
-
-
-@app.read_resource()
-async def read_resource(uri: AnyUrl) -> str:
-    """Read table contents."""
-    config = get_db_config()
-    uri_str = str(uri)
-    logger.info(f"Reading resource: {uri_str}")
-    prefix = "oceanbase://"
-
-    if not uri_str.startswith(prefix):
-        raise ValueError(f"Invalid URI scheme: {uri_str}")
-
-    parts = uri_str[len(prefix) :].split("/")
-    table = parts[1]
-
-    try:
-        with connect(**config) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT * FROM `%s` LIMIT 100", (table,))
+                resp_header = "Tables of this table: \n"
                 columns = [desc[0] for desc in cursor.description]
                 rows = cursor.fetchall()
                 result = [",".join(map(str, row)) for row in rows]
-                return "\n".join([",".join(columns)] + result)
-
+                return resp_header + ("\n".join([",".join(columns)] + result))
     except Error as e:
-        logger.error(f"Database error reading resource {uri}: {str(e)}")
-        raise RuntimeError(f"Database error: {str(e)}")
+        logger.error(f"Failed to list tables: {str(e)}")
+        return "Failed to list tables"
 
 
-@app.list_tools()
-async def list_tools() -> list[Tool]:
-    """List available OceanBase tools."""
-    logger.info("Listing tools...")
-    return [
-        Tool(
-            name="execute_sql",
-            description="Execute a SQL query on the OceanBase server",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "The SQL query to execute",
-                    }
-                },
-                "required": ["query"],
-            },
-        )
+@app.tool(name="configure_db_connection")
+def configure_db_connection(
+    host: Optional[str] = None,
+    port: Optional[int] = None,
+    user: Optional[str] = None,
+    password: Optional[str] = None,
+    database: Optional[str] = None,
+) -> Dict[str, str | int]:
+    """
+    Retrieve OceanBase database connection information.
+    If no parameters are provided, the configuration is loaded from environment variables.
+    Otherwise, user-defined connection parameters will be used.
+
+    :param host: Database host address. Defaults to environment variable OB_HOST or "localhost".
+    :param port: Database port number. Defaults to environment variable OB_PORT or "2881".
+    :param user: Database username. Required. Defaults to user input or environment variable OB_USER.
+    :param password: Database password. Required. Defaults to user input or environment variable OB_PASSWORD.
+    :param database: Database name. Required. Defaults to user input or environment variable OB_DATABASE.
+    :return: A dictionary containing the database connection configuration.
+    :raises ValueError: Raised if any of the required parameters (user, password, database) are missing.
+    """
+    global global_config
+    if global_config:
+        return global_config
+
+    # Use user-provided values or fallback to environment variables
+    config = {
+        "host": host or os.getenv("OB_HOST", "localhost"),
+        "port": port or os.getenv("OB_PORT", 2881),
+        "user": user or os.getenv("OB_USER"),
+        "password": password or os.getenv("OB_PASSWORD"),
+        "database": database or os.getenv("OB_DATABASE"),
+    }
+
+    # Check if all required parameters are provided
+    missing_params = [
+        key for key in ["user", "password", "database"] if not config.get(key)
     ]
+    if missing_params:
+        logger.error(
+            "Missing required database configuration. Please check the following parameters: %s",
+            ", ".join(missing_params),
+        )
+        raise ValueError(
+            "Unable to obtain database connection configuration information from environment variables. "
+            "Please provide database connection configuration information."
+        )
+
+    # Log successfully loaded configuration (but hide sensitive information like the password)
+    logger.info(
+        "Database configuration loaded successfully: host=%s, port=%d, user=%s, database=%s",
+        config["host"],
+        int(config["port"]),
+        config["user"],
+        config["database"],
+    )
+    global_config = config
+
+    return global_config
 
 
-@app.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """Execute SQL commands."""
-    config = get_db_config()
-    logger.info(f"Calling tool: {name} with arguments: {arguments}")
-
-    if name != "execute_sql":
-        raise ValueError(f"Unknown tool: {name}")
-
-    query = arguments.get("query")
-    if not query:
-        raise ValueError("Query is required")
+@app.tool()
+def execute_sql(query: str) -> str:
+    """Execute an SQL query on the OceanBase server."""
+    config = configure_db_connection()
+    logger.info(f"Calling tool: execute_sql  with arguments: {query}")
 
     try:
         with connect(**config) as conn:
@@ -140,79 +131,156 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 # Special handling for SHOW TABLES
                 if query.strip().upper().startswith("SHOW TABLES"):
                     tables = cursor.fetchall()
-                    result = ["Tables_in_" + config["database"]]  # Header
+                    result = [f"Tables in {config['database']}: "]  # Header
                     result.extend([table[0] for table in tables])
-                    return [TextContent(type="text", text="\n".join(result))]
+                    return "\n".join(result)
 
                 elif query.strip().upper().startswith("SHOW COLUMNS"):
                     resp_header = "Columns info of this table: \n"
                     columns = [desc[0] for desc in cursor.description]
                     rows = cursor.fetchall()
                     result = [",".join(map(str, row)) for row in rows]
-                    return [
-                        TextContent(
-                            type="text",
-                            text=resp_header
-                            + ("\n".join([",".join(columns)] + result)),
-                        )
-                    ]
+                    return resp_header + ("\n".join([",".join(columns)] + result))
 
                 elif query.strip().upper().startswith("DESCRIBE"):
                     resp_header = "Description of this table: \n"
                     columns = [desc[0] for desc in cursor.description]
                     rows = cursor.fetchall()
                     result = [",".join(map(str, row)) for row in rows]
-                    return [
-                        TextContent(
-                            type="text",
-                            text=resp_header
-                            + ("\n".join([",".join(columns)] + result)),
-                        )
-                    ]
+                    return resp_header + ("\n".join([",".join(columns)] + result))
 
                 # Regular SELECT queries
                 elif query.strip().upper().startswith("SELECT"):
                     columns = [desc[0] for desc in cursor.description]
                     rows = cursor.fetchall()
                     result = [",".join(map(str, row)) for row in rows]
-                    return [
-                        TextContent(
-                            type="text", text="\n".join([",".join(columns)] + result)
-                        )
-                    ]
+                    return "\n".join([",".join(columns)] + result)
+
+                # Regular SHOW queries
+                elif query.strip().upper().startswith("SHOW"):
+                    rows = cursor.fetchall()
+                    return rows
 
                 # Non-SELECT queries
                 else:
                     conn.commit()
-                    return [
-                        TextContent(
-                            type="text",
-                            text=f"Query executed successfully. Rows affected: {cursor.rowcount}",
-                        )
-                    ]
+                    return (
+                        f"Query executed successfully. Rows affected: {cursor.rowcount}"
+                    )
 
     except Error as e:
         logger.error(f"Error executing SQL '{query}': {e}")
-        return [TextContent(type="text", text=f"Error executing query: {str(e)}")]
+        return f"Error executing query: {str(e)}"
 
 
-async def main():
-    """Main entry point to run the MCP server."""
-    logger.info("Starting OceanBase MCP server...")
-    config = get_db_config()
+@app.tool()
+def get_ob_ash_report(
+    start_time: str,
+    end_time: str,
+    tenant_id: Optional[str] = None,
+) -> str:
+    """
+    Get OceanBase Active Session History report.
+    ASH can sample the status of all Active Sessions in the system at 1-second intervals, including:
+        Current executing SQL ID
+        Current wait events (if any)
+        Wait time and wait parameters
+        The module where the SESSION is located during sampling (PARSE, EXECUTE, PL, etc.)
+        SESSION status records, such as SESSION MODULE, ACTION, CLIENT ID
+    This will be very useful when you perform performance analysis.RetryClaude can make mistakes. Please double-check responses.
+    """
+    config = configure_db_connection()
     logger.info(
-        f"Database config: {config['host']}/{config['database']} as {config['user']}"
+        f"Calling tool: get_ob_ash_report  with arguments: {start_time}, {end_time}, {tenant_id}"
     )
+    if tenant_id is None:
+        tenant_id = "NULL"
+    # Construct the SQL query
+    sql_query = f"""
+        CALL DBMS_WORKLOAD_REPOSITORY.ASH_REPORT('{start_time}','{end_time}', NULL, NULL, NULL, 'TEXT', NULL, NULL, {tenant_id});
+    """
+    try:
+        with connect(**config) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(sql_query)
+                result = cursor.fetchall()
+                logger.info(f"ASH report result: {result}")
+                if not result:
+                    return "No data found in ASH report."
+                # the first column contains the report text
+                return str(result[0])
+    except Error as e:
+        logger.error(f"Error get ASH report,executing SQL '{sql_query}': {e}")
+        return f"Error get ASH report,{str(e)}"
 
-    async with stdio_server() as (read_stream, write_stream):
-        try:
-            await app.run(
-                read_stream, write_stream, app.create_initialization_options()
-            )
-        except Exception as e:
-            logger.error(f"Server error: {str(e)}", exc_info=True)
-            raise
+
+@app.tool(name="get_current_time", description="Get current time")
+def get_current_time() -> str:
+    local_time = time.localtime()
+    formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
+    logger.info(f"Current time: {formatted_time}")
+    return formatted_time
+
+
+@app.tool()
+def get_current_tenant() -> str:
+    """
+    Get the current tenant name from oceanbase.
+    """
+    logger.info("Calling tool: get_current_tenant")
+    sql_query = "show tenant"
+    try:
+        result = execute_sql(sql_query)
+        logger.info(f"Current tenant: {result}")
+        return result[0][0]
+    except Error as e:
+        logger.error(f"Error executing SQL '{sql_query}': {e}")
+        return f"Error executing query: {str(e)}"
+
+
+@app.tool()
+def get_all_server_nodes():
+    """
+    Get all server nodes from oceanbase.
+    You need to be sys tenant to get all server nodes.
+    """
+    tenant = get_current_tenant()
+    if tenant != "sys":
+        raise ValueError("Only sys tenant can get all server nodes")
+
+    logger.info("Calling tool: get_all_server_nodes")
+    sql_query = "select * from DBA_OB_SERVERS"
+    try:
+        return execute_sql(sql_query)
+    except Error as e:
+        logger.error(f"Error executing SQL '{sql_query}': {e}")
+        return f"Error executing query: {str(e)}"
+
+
+@app.tool()
+def get_resource_capacity():
+    """
+    Get resource capacity from oceanbase.
+    You need to be sys tenant to get resource capacity.
+    """
+    tenant = get_current_tenant()
+    if tenant != "sys":
+        raise ValueError("Only sys tenant can get resource capacity")
+    logger.info("Calling tool: get_resource_capacity")
+    sql_query = "select * from oceanbase.GV$OB_SERVERS"
+    try:
+        return execute_sql(sql_query)
+    except Error as e:
+        logger.error(f"Error executing SQL '{sql_query}': {e}")
+        return f"Error executing query: {str(e)}"
+
+
+def main(transport: Literal["stdio", "sse"] = "stdio", port: int = 8000):
+    """Main entry point to run the MCP server."""
+    logger.info(f"Starting OceanBase MCP server with {transport} mode...")
+    app.settings.port = port
+    app.run(transport=transport)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    app.run()

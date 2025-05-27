@@ -1,5 +1,4 @@
-from . import server, server_on_fastmcp
-import asyncio
+from . import server
 import argparse
 
 
@@ -7,23 +6,18 @@ def main():
     """Main entry point for the package."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--legacy", type=bool, default=False, help="Whether to enable legacy mode."
-    )
-    parser.add_argument(
         "--transport",
         type=str,
         default="stdio",
         help="Specify the MCP server transport type as stdio or sse.",
     )
+    parser.add_argument("--port", type=int, default=8000, help="SSE Port to listen on")
     args = parser.parse_args()
-    if args.legacy:
-        asyncio.run(server.main())
+    if args.transport == "stdio":
+        server.main()
     else:
-        if args.transport == "stdio":
-            server_on_fastmcp.main()
-        else:
-            server_on_fastmcp.main(transport="sse")
+        server.main(transport="sse", port=args.port)
 
 
 # Expose important items at package level
-__all__ = ["main", "server", "server_on_fastmcp"]
+__all__ = ["main", "server"]
