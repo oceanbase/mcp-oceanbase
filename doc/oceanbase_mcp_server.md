@@ -11,6 +11,12 @@ This server allows AI assistants to list tables, read data, and execute SQL quer
 - Secure database access through environment variables
 - Comprehensive logging
 
+## Tools
+- [x] Execute SQL queries
+- [x] Get current tenant
+- [x] Get all server nodes (sys tenant only)
+- [x] Get resource capacity (sys tenant only)
+- [x] Get ASH report
 
 ## Configuration
 
