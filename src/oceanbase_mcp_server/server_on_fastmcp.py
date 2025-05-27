@@ -221,12 +221,13 @@ def get_current_time() -> str:
     logger.info(f"Current time: {formatted_time}")
     return formatted_time
 
+
 @app.tool()
 def get_current_tenant() -> str:
     """
     Get the current tenant name from oceanbase.
     """
-    logger.info(f"Calling tool: get_current_tenant")
+    logger.info("Calling tool: get_current_tenant")
     sql_query = "show tenant"
     try:
         result = execute_sql(sql_query)
@@ -236,6 +237,7 @@ def get_current_tenant() -> str:
         logger.error(f"Error executing SQL '{sql_query}': {e}")
         return f"Error executing query: {str(e)}"
 
+
 @app.tool()
 def get_all_server_nodes():
     """
@@ -243,16 +245,17 @@ def get_all_server_nodes():
     You need to be sys tenant to get all server nodes.
     """
     tenant = get_current_tenant()
-    if tenant != 'sys':
+    if tenant != "sys":
         raise ValueError("Only sys tenant can get all server nodes")
 
-    logger.info(f"Calling tool: get_all_server_nodes")
+    logger.info("Calling tool: get_all_server_nodes")
     sql_query = "select * from DBA_OB_SERVERS"
     try:
         return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error executing SQL '{sql_query}': {e}")
         return f"Error executing query: {str(e)}"
+
 
 @app.tool()
 def get_resource_capacity():
@@ -261,15 +264,16 @@ def get_resource_capacity():
     You need to be sys tenant to get resource capacity.
     """
     tenant = get_current_tenant()
-    if tenant!='sys':
+    if tenant != "sys":
         raise ValueError("Only sys tenant can get resource capacity")
-    logger.info(f"Calling tool: get_resource_capacity")
+    logger.info("Calling tool: get_resource_capacity")
     sql_query = "select * from oceanbase.GV$OB_SERVERS"
     try:
         return execute_sql(sql_query)
     except Error as e:
         logger.error(f"Error executing SQL '{sql_query}': {e}")
         return f"Error executing query: {str(e)}"
+
 
 def main(transport: Literal["stdio", "sse"] = "stdio"):
     """Main entry point to run the MCP server."""
