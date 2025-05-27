@@ -174,8 +174,8 @@ def call_tool(query: str) -> str:
     name="get_ob_ash_report", description="Get OceanBase Active Session History report"
 )
 def get_ob_ash_report(
-    start_time: str = None,
-    end_time: str = None,
+    start_time: str,
+    end_time: str,
     tenant_id: Optional[str] = None,
 ) -> str:
     config = configure_db_connection()
@@ -194,10 +194,13 @@ def get_ob_ash_report(
                 cursor.execute(sql_query)
                 result = cursor.fetchall()
                 logger.info(f"ASH report result: {result}")
-                return result
+                if not result:
+                    return "No data found in ASH report."
+                # the first column contains the report text
+                return str(result[0])
     except Error as e:
-        logger.error(f"Error executing SQL '{sql_query}': {e}")
-        return f"Error executing query: {str(e)}"
+        logger.error(f"Error get ASH report,executing SQL '{sql_query}': {e}")
+        return f"Error get ASH report,{str(e)}"
 
 
 @app.tool(name="get_current_time", description="Get current time")
