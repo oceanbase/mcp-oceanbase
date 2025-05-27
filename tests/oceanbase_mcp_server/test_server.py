@@ -1,5 +1,3 @@
-import pytest
-
 from oceanbase_mcp_server.server import app
 
 
