@@ -20,16 +20,3 @@ async def test_call_tool_missing_query():
     """Test calling execute_sql without a query."""
     with pytest.raises(ValueError, match="Query is required"):
         await call_tool("execute_sql", {})
-
-
-# Skip database-dependent tests if no database connection
-@pytest.mark.asyncio
-@pytest.mark.skipif(
-    not all(
-        [
-            pytest.importorskip("mysql.connector"),
-            pytest.importorskip("oceanbase_mcp_server"),
-        ]
-    ),
-    reason="OceanBase connection not available",
-)
