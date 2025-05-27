@@ -1,6 +1,6 @@
 import pytest
 
-from oceanbase_mcp_server.server_on_fastmcp import app
+from oceanbase_mcp_server.server import app
 
 
 def test_server_initialization():
