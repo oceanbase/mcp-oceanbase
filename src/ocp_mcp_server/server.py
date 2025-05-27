@@ -127,7 +127,7 @@ def ocp_api_backup_restore_description():
 def query_ocp_api(
     method: str,
     request_path: str,
-    md5payload: str = '',
+    md5payload: str = "",
     query_param: dict | None = None,
     protocal: str = "application/json",
     ocp_header: str = "from-mcp",
