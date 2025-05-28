@@ -30,10 +30,10 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv
 source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
 
-# If you configure the OceanBase connection information using .env file.You should copy .env.template to .env and modify .env
+# If you configure the OceanBase connection information using .env file. You should copy .env.template to .env and modify .env
 cp .env.template .env
 
-# Install development dependencies
+# Install dependencies
 uv pip install .
 
 ```
