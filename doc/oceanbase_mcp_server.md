@@ -78,7 +78,9 @@ Add the following content to the configuration file that supports the MCP server
 }
 ```
 ### SSE Mode
-Within the mcp-oceanbase directory, execute the following command, the port can be customized as desired.
+Within the mcp-oceanbase directory, execute the following command, the port can be customized as desired.<br>
+'--transport': Specify the MCP server transport type as stdio or sse, default is stdio.<br>
+'--port': Specify sse port to listen on, default is 8000
 ```bash
 uv run oceanbase_mcp_server --transport sse --port 8000
 ```
