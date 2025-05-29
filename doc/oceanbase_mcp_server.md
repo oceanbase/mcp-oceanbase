@@ -12,15 +12,34 @@ This server allows AI assistants to list tables, read data, and execute SQL quer
 - Comprehensive logging
 
 ## Tools
-- [x] Execute SQL queries
-- [x] Get current tenant
-- [x] Get all server nodes (sys tenant only)
-- [x] Get resource capacity (sys tenant only)
-- [x] Get ASH report
+- [✔️] Execute SQL queries
+- [✔️] Get current tenant
+- [✔️] Get all server nodes (sys tenant only)
+- [✔️] Get resource capacity (sys tenant only)
+- [✔️] Get [ASH](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002013776) report
 
+## Install
+
+```bash
+# Clone the repository
+git clone https://github.com/oceanbase/mcp-oceanbase.git
+cd mcp-oceanbase
+
+# Install the Python package manager uv and create virtual environment
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv
+source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
+
+# If you configure the OceanBase connection information using .env file. You should copy .env.template to .env and modify .env
+cp .env.template .env
+
+# Install dependencies
+uv pip install .
+
+```
 ## Configuration
-
-Set the following environment variables:
+There are two ways to configure the connection information of OceanBase
+1. Set the following environment variables:
 
 ```bash
 OB_HOST=localhost     # Database host
@@ -29,12 +48,12 @@ OB_USER=your_username
 OB_PASSWORD=your_password
 OB_DATABASE=your_database
 ```
-
+2. Configure in the .env file
 ## Usage
 
-### With Claude Desktop
+### Stdio Mode
 
-Add this to your `claude_desktop_config.json`:
+Add the following content to the configuration file that supports the MCP server client:
 
 ```json
 {
@@ -58,36 +77,12 @@ Add this to your `claude_desktop_config.json`:
   }
 }
 ```
-
-### As a standalone server
-
+### SSE Mode
+Within the mcp-oceanbase directory, execute the following command, the port can be customized as desired.<br>
+'--transport': Specify the MCP server transport type as stdio or sse, default is stdio.<br>
+'--port': Specify sse port to listen on, default is 8000
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the server
-python -m oceanbase_mcp_server
-```
-
-## Install & Development
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/mcp-oceanbase.git
-cd mcp-oceanbase
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
-
-# Copy and modify .env
-cp .env.template .env
-
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-pytest
+uv run oceanbase_mcp_server --transport sse --port 8000
 ```
 
 ## Security Considerations
