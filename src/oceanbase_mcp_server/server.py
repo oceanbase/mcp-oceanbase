@@ -315,7 +315,7 @@ def search_oceanbase_document(keyword: str) -> str:
                     + item["id"]
                 )
                 logger.info(f"doc_url:${doc_url}")
-                content = get_ob_doc_content(doc_url,item["id"])
+                content = get_ob_doc_content(doc_url, item["id"])
                 result_list.append(content)
             return json.dumps(result_list, ensure_ascii=False)
     except error.HTTPError as e:
@@ -326,8 +326,8 @@ def search_oceanbase_document(keyword: str) -> str:
         return "No results were found"
 
 
-def get_ob_doc_content(url: str,doc_id:str) -> dict:
-    doc_param = {"id": "1000000002016487", "url": url}
+def get_ob_doc_content(url: str, doc_id: str) -> dict:
+    doc_param = {"id": doc_id, "url": url}
     doc_param = json.dumps(doc_param).encode("utf-8")
     headers = {
         "Content-Type": "application/json",
