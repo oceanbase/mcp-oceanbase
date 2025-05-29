@@ -2,10 +2,13 @@ import logging
 import os
 import time
 from typing import Dict, Literal, Optional
+from urllib import request, error
+import json
 
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from mysql.connector import Error, connect
+from bs4 import BeautifulSoup
 
 # Configure logging
 logging.basicConfig(
@@ -273,6 +276,108 @@ def get_resource_capacity():
     except Error as e:
         logger.error(f"Error executing SQL '{sql_query}': {e}")
         return f"Error executing query: {str(e)}"
+
+
+@app.tool()
+def search_oceanbase_document(keyword: str) -> str:
+    """
+    Query the relevant documentation of OceanBase if you have any doubts.
+    The parameters are the keywords you extract from the user's question or your answer.
+    """
+    search_url = "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v3/searchDocList"
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json",
+        "Origin": "https://www.oceanbase.com",
+        "Referer": "https://www.oceanbase.com/",
+    }
+    qeury_param = {
+        "pageNo": 1,
+        "pageSize": 5,  # 一次搜索5条结果
+        "query": keyword,
+    }
+    # 把字典转换为json字符串,然后编码为bytes
+    qeury_param = json.dumps(qeury_param).encode("utf-8")
+    req = request.Request(search_url, data=qeury_param, headers=headers, method="POST")
+    try:
+        with request.urlopen(req) as response:
+            response_body = response.read().decode("utf-8")
+            json_data = json.loads(response_body)
+            # 返回的结果中主要需要data字段中的内容
+            data_array = json_data["data"]  # Parse JSON response
+            result_list = []
+            for item in data_array:
+                doc_url = (
+                    "https://www.oceanbase.com/docs/"
+                    + item["urlCode"]
+                    + "-"
+                    + item["id"]
+                )
+                logger.info(f"doc_url:${doc_url}")
+                content = get_ob_doc_content(doc_url)
+                result_list.append(content)
+            return json.dumps(result_list, ensure_ascii=False)
+    except error.HTTPError as e:
+        logger.error(f"HTTP Error: {e.code} - {e.reason}")
+        return "No results were found"
+    except error.URLError as e:
+        logger.error(f"URL Error: {e.reason}")
+        return "No results were found"
+
+
+def get_ob_doc_content(url: str) -> dict:
+    doc_param = {"id": "1000000002016487", "url": url}
+    doc_param = json.dumps(doc_param).encode("utf-8")
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json",
+        "Origin": "https://www.oceanbase.com",
+        "Referer": "https://www.oceanbase.com/",
+    }
+    req = request.Request(url, data=doc_param, headers=headers, method="POST")
+    try:
+        with request.urlopen(req) as response:
+            response_body = response.read().decode("utf-8")
+            json_data = json.loads(response_body)
+            # 返回的结果中主要需要data字段中的数据
+            data = json_data["data"]
+            # docContent字段中是HTML文本
+            soup = BeautifulSoup(data["docContent"], "html.parser")
+            # 去除script/style/nav/header/footer这些元素
+            for element in soup(["script", "style", "nav", "header", "footer"]):
+                element.decompose()
+            # 将HTML的标签去掉,只留文本
+            text = soup.get_text()
+            # 去除行前后的空格
+            lines = (line.strip() for line in text.splitlines())
+            # 并去除空行
+            text = "\n".join(line for line in lines if line)
+            logger.info(f"text length:{len(text)}")
+            # 如果文本太长了,就只截取前8000的字符
+            if len(text) > 8000:
+                text = text[:8000] + "... [content truncated]"
+            # 重新组织下最后的结果,tdkInfo字段中包含文档的title/description/keyword,这些信息
+            tdkInfo = data["tdkInfo"]
+            final_result = {
+                "title": tdkInfo["title"],
+                "description": tdkInfo["description"],
+                "keyword": tdkInfo["keyword"],
+                "content": text,
+                "oceanbase_version": data["version"],
+                "content_updatetime": data["docGmtModified"],
+            }
+            # result_list=[]
+            # result_list.append(final_result)
+            # print(json.dumps(result_list,ensure_ascii=False))
+            return final_result
+    except error.HTTPError as e:
+        logger.error(f"HTTP Error: {e.code} - {e.reason}")
+        return {"result": "No results were found"}
+    except error.URLError as e:
+        logger.error(f"URL Error: {e.reason}")
+        return {"result": "No results were found"}
 
 
 def main(transport: Literal["stdio", "sse"] = "stdio", port: int = 8000):
