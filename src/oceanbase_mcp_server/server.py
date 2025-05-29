@@ -284,6 +284,7 @@ def search_oceanbase_document(keyword: str) -> str:
     Query the relevant documentation of OceanBase if you have any doubts.
     The parameters are the keywords you extract from the user's question or your answer.
     """
+    logger.info(f"Calling tool: search_oceanbase_document,keyword:{keyword}")
     search_url = "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v3/searchDocList"
     headers = {
         "Content-Type": "application/json",
