@@ -165,7 +165,13 @@ def execute_sql(query: str) -> str:
                 elif query.strip().upper().startswith("SHOW"):
                     rows = cursor.fetchall()
                     return rows
-
+                # process procedural invoke 
+                elif query.strip().upper().startswith("CALL"):
+                    rows = cursor.fetchall()
+                    if not rows:
+                        return "No data found in ASH report."
+                # the first column contains the report text
+                    return str(rows[0])
                 # Non-SELECT queries
                 else:
                     conn.commit()
@@ -194,7 +200,6 @@ def get_ob_ash_report(
         SESSION status records, such as SESSION MODULE, ACTION, CLIENT ID
     This will be very useful when you perform performance analysis.RetryClaude can make mistakes. Please double-check responses.
     """
-    config = configure_db_connection()
     logger.info(
         f"Calling tool: get_ob_ash_report  with arguments: {start_time}, {end_time}, {tenant_id}"
     )
@@ -205,15 +210,9 @@ def get_ob_ash_report(
         CALL DBMS_WORKLOAD_REPOSITORY.ASH_REPORT('{start_time}','{end_time}', NULL, NULL, NULL, 'TEXT', NULL, NULL, {tenant_id});
     """
     try:
-        with connect(**config) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(sql_query)
-                result = cursor.fetchall()
-                logger.info(f"ASH report result: {result}")
-                if not result:
-                    return "No data found in ASH report."
-                # the first column contains the report text
-                return str(result[0])
+        result = execute_sql(sql_query)
+        logger.info(f"ASH report result: {result}")
+        return result
     except Error as e:
         logger.error(f"Error get ASH report,executing SQL '{sql_query}': {e}")
         return f"Error get ASH report,{str(e)}"
