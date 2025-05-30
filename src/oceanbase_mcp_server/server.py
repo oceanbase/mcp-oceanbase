@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from mysql.connector import Error, connect
 from bs4 import BeautifulSoup
+import certifi
+import ssl
 
 # Configure logging
 logging.basicConfig(
@@ -285,7 +287,7 @@ def search_oceanbase_document(keyword: str) -> str:
     The parameters are the keywords you extract from the user's question or your answer.
     """
     logger.info(f"Calling tool: search_oceanbase_document,keyword:{keyword}")
-    search_url = "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v3/searchDocList"
+    search_api_url = "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v3/searchDocList"
     headers = {
         "Content-Type": "application/json",
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -300,9 +302,13 @@ def search_oceanbase_document(keyword: str) -> str:
     }
     # 把字典转换为json字符串,然后编码为bytes
     qeury_param = json.dumps(qeury_param).encode("utf-8")
-    req = request.Request(search_url, data=qeury_param, headers=headers, method="POST")
+    req = request.Request(
+        search_api_url, data=qeury_param, headers=headers, method="POST"
+    )
+    # 创建一个使用 certifi 的 SSL 上下文,解决https的报错问题
+    context = ssl.create_default_context(cafile=certifi.where())
     try:
-        with request.urlopen(req) as response:
+        with request.urlopen(req, context=context) as response:
             response_body = response.read().decode("utf-8")
             json_data = json.loads(response_body)
             # 返回的结果中主要需要data字段中的内容
@@ -327,8 +333,8 @@ def search_oceanbase_document(keyword: str) -> str:
         return "No results were found"
 
 
-def get_ob_doc_content(url: str, doc_id: str) -> dict:
-    doc_param = {"id": doc_id, "url": url}
+def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
+    doc_param = {"id": doc_id, "url": doc_url}
     doc_param = json.dumps(doc_param).encode("utf-8")
     headers = {
         "Content-Type": "application/json",
@@ -337,9 +343,12 @@ def get_ob_doc_content(url: str, doc_id: str) -> dict:
         "Origin": "https://www.oceanbase.com",
         "Referer": "https://www.oceanbase.com/",
     }
-    req = request.Request(url, data=doc_param, headers=headers, method="POST")
+    doc_api_url = "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v4/docDetails"
+    req = request.Request(doc_api_url, data=doc_param, headers=headers, method="POST")
+    # 创建一个使用 certifi 的 SSL 上下文,解决https的报错问题
+    context = ssl.create_default_context(cafile=certifi.where())
     try:
-        with request.urlopen(req) as response:
+        with request.urlopen(req, context=context) as response:
             response_body = response.read().decode("utf-8")
             json_data = json.loads(response_body)
             # 返回的结果中主要需要data字段中的数据

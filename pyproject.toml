@@ -8,7 +8,8 @@ dependencies = [
     "mcp[cli]>=1.0.0",
     "mysql-connector-python>=9.1.0",
     "python-dotenv",
-    "beautifulsoup4>=4.13.3"
+    "beautifulsoup4>=4.13.3",
+    "certifi>=2025.4.26",
 ]
 
 [[project.authors]]
