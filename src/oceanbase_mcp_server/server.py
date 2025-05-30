@@ -169,7 +169,7 @@ def execute_sql(query: str) -> str:
                 elif query.strip().upper().startswith("CALL"):
                     rows = cursor.fetchall()
                     if not rows:
-                        return "No data found."
+                        return "No result return."
                     # the first column contains the report text
                     return str(rows[0])
                 # Non-SELECT queries
