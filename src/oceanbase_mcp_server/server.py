@@ -283,8 +283,11 @@ def get_resource_capacity():
 @app.tool()
 def search_oceanbase_document(keyword: str) -> str:
     """
-    Query the relevant documentation of OceanBase if you have any doubts.
-    The parameters are the keywords you extract from the user's question or your answer.
+    This tool is designed to provide context-specific information about OceanBase to a large language model (LLM) to enhance the accuracy and relevance of its responses. The main functions of this tool include:
+    1.Keyword Extraction: The LLM automatically extracts relevant search keywords from user queries.
+    2.Information Retrieval: The MCP Tool searches through OceanBase-related documentation using the extracted keywords, locating and extracting the most relevant information.
+    3.Context Provision: The retrieved information from OceanBase documentation is then fed back to the LLM as contextual reference material. This context is not directly shown to the user but is used to refine and inform the LLM’s responses.
+    This tool ensures that when the LLM’s internal documentation is insufficient to generate high-quality responses, it dynamically retrieves necessary OceanBase information, thereby maintaining a high level of response accuracy and expertise.
     """
     logger.info(f"Calling tool: search_oceanbase_document,keyword:{keyword}")
     search_api_url = "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v3/searchDocList"
