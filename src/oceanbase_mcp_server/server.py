@@ -312,7 +312,7 @@ def search_oceanbase_document(keyword: str) -> str:
     # 创建一个使用 certifi 的 SSL 上下文,解决https的报错问题
     context = ssl.create_default_context(cafile=certifi.where())
     try:
-        with request.urlopen(req, context=context) as response:
+        with request.urlopen(req, timeout=5, context=context) as response:
             response_body = response.read().decode("utf-8")
             json_data = json.loads(response_body)
             # 返回的结果中主要需要data字段中的内容
@@ -352,7 +352,7 @@ def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
     # 创建一个使用 certifi 的 SSL 上下文,解决https的报错问题
     context = ssl.create_default_context(cafile=certifi.where())
     try:
-        with request.urlopen(req, context=context) as response:
+        with request.urlopen(req, timeout=5, context=context) as response:
             response_body = response.read().decode("utf-8")
             json_data = json.loads(response_body)
             # 返回的结果中主要需要data字段中的数据
@@ -366,13 +366,13 @@ def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
             text = soup.get_text()
             # 去除行前后的空格
             lines = (line.strip() for line in text.splitlines())
-            # 并去除空行
+            # 去除空行
             text = "\n".join(line for line in lines if line)
             logger.info(f"text length:{len(text)}")
             # 如果文本太长了,就只截取前8000的字符
             if len(text) > 8000:
                 text = text[:8000] + "... [content truncated]"
-            # 重新组织下最后的结果,tdkInfo字段中包含文档的title/description/keyword,这些信息
+            # 重新组织下最后的结果,tdkInfo字段中包含文档的title/description/keyword这些信息
             tdkInfo = data["tdkInfo"]
             final_result = {
                 "title": tdkInfo["title"],
@@ -382,9 +382,6 @@ def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
                 "oceanbase_version": data["version"],
                 "content_updatetime": data["docGmtModified"],
             }
-            # result_list=[]
-            # result_list.append(final_result)
-            # print(json.dumps(result_list,ensure_ascii=False))
             return final_result
     except error.HTTPError as e:
         logger.error(f"HTTP Error: {e.code} - {e.reason}")
