@@ -165,12 +165,12 @@ def execute_sql(query: str) -> str:
                 elif query.strip().upper().startswith("SHOW"):
                     rows = cursor.fetchall()
                     return rows
-                # process procedural invoke 
+                # process procedural invoke
                 elif query.strip().upper().startswith("CALL"):
                     rows = cursor.fetchall()
                     if not rows:
                         return "No data found in ASH report."
-                # the first column contains the report text
+                    # the first column contains the report text
                     return str(rows[0])
                 # Non-SELECT queries
                 else:
