@@ -284,7 +284,7 @@ def get_resource_capacity():
 def search_oceanbase_document(keyword: str) -> str:
     """
     This tool is designed to provide context-specific information about OceanBase to a large language model (LLM) to enhance the accuracy and relevance of its responses. 
-    The LLM should automatically extracts relevant search keywords from user queries or LLM's answer for the tool  parameter "keyword".
+    The LLM should automatically extracts relevant search keywords from user queries or LLM's answer for the tool parameter "keyword".
     The main functions of this tool include:
     1.Information Retrieval: The MCP Tool searches through OceanBase-related documentation using the extracted keywords, locating and extracting the most relevant information.
     2.Context Provision: The retrieved information from OceanBase documentation is then fed back to the LLM as contextual reference material. This context is not directly shown to the user but is used to refine and inform the LLM’s responses.
