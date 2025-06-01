@@ -17,6 +17,8 @@ This server allows AI assistants to list tables, read data, and execute SQL quer
 - [✔️] Get all server nodes (sys tenant only)
 - [✔️] Get resource capacity (sys tenant only)
 - [✔️] Get [ASH](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002013776) report
+- [✔️] Search OceanBase document from official website.
+  This tool is experimental because the API on the official website may change.
 
 ## Install
 

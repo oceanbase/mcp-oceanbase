@@ -2,10 +2,15 @@ import logging
 import os
 import time
 from typing import Dict, Literal, Optional
+from urllib import request, error
+import json
 
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from mysql.connector import Error, connect
+from bs4 import BeautifulSoup
+import certifi
+import ssl
 
 # Configure logging
 logging.basicConfig(
@@ -160,7 +165,13 @@ def execute_sql(query: str) -> str:
                 elif query.strip().upper().startswith("SHOW"):
                     rows = cursor.fetchall()
                     return rows
-
+                # process procedural invoke
+                elif query.strip().upper().startswith("CALL"):
+                    rows = cursor.fetchall()
+                    if not rows:
+                        return "No result return."
+                    # the first column contains the report text
+                    return str(rows[0])
                 # Non-SELECT queries
                 else:
                     conn.commit()
@@ -189,7 +200,6 @@ def get_ob_ash_report(
         SESSION status records, such as SESSION MODULE, ACTION, CLIENT ID
     This will be very useful when you perform performance analysis.RetryClaude can make mistakes. Please double-check responses.
     """
-    config = configure_db_connection()
     logger.info(
         f"Calling tool: get_ob_ash_report  with arguments: {start_time}, {end_time}, {tenant_id}"
     )
@@ -200,15 +210,9 @@ def get_ob_ash_report(
         CALL DBMS_WORKLOAD_REPOSITORY.ASH_REPORT('{start_time}','{end_time}', NULL, NULL, NULL, 'TEXT', NULL, NULL, {tenant_id});
     """
     try:
-        with connect(**config) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(sql_query)
-                result = cursor.fetchall()
-                logger.info(f"ASH report result: {result}")
-                if not result:
-                    return "No data found in ASH report."
-                # the first column contains the report text
-                return str(result[0])
+        result = execute_sql(sql_query)
+        logger.info(f"ASH report result: {result}")
+        return result
     except Error as e:
         logger.error(f"Error get ASH report,executing SQL '{sql_query}': {e}")
         return f"Error get ASH report,{str(e)}"
@@ -273,6 +277,117 @@ def get_resource_capacity():
     except Error as e:
         logger.error(f"Error executing SQL '{sql_query}': {e}")
         return f"Error executing query: {str(e)}"
+
+
+@app.tool()
+def search_oceanbase_document(keyword: str) -> str:
+    """
+    This tool is designed to provide context-specific information about OceanBase to a large language model (LLM) to enhance the accuracy and relevance of its responses.
+    The LLM should automatically extracts relevant search keywords from user queries or LLM's answer for the tool parameter "keyword".
+    The main functions of this tool include:
+    1.Information Retrieval: The MCP Tool searches through OceanBase-related documentation using the extracted keywords, locating and extracting the most relevant information.
+    2.Context Provision: The retrieved information from OceanBase documentation is then fed back to the LLM as contextual reference material. This context is not directly shown to the user but is used to refine and inform the LLM’s responses.
+    This tool ensures that when the LLM’s internal documentation is insufficient to generate high-quality responses, it dynamically retrieves necessary OceanBase information, thereby maintaining a high level of response accuracy and expertise.
+    """
+    logger.info(f"Calling tool: search_oceanbase_document,keyword:{keyword}")
+    search_api_url = "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v3/searchDocList"
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json",
+        "Origin": "https://www.oceanbase.com",
+        "Referer": "https://www.oceanbase.com/",
+    }
+    qeury_param = {
+        "pageNo": 1,
+        "pageSize": 5,  # 一次搜索5条结果
+        "query": keyword,
+    }
+    # 把字典转换为json字符串,然后编码为bytes
+    qeury_param = json.dumps(qeury_param).encode("utf-8")
+    req = request.Request(
+        search_api_url, data=qeury_param, headers=headers, method="POST"
+    )
+    # 创建一个使用 certifi 的 SSL 上下文,解决https的报错问题
+    context = ssl.create_default_context(cafile=certifi.where())
+    try:
+        with request.urlopen(req, timeout=5, context=context) as response:
+            response_body = response.read().decode("utf-8")
+            json_data = json.loads(response_body)
+            # 返回的结果中主要需要data字段中的内容
+            data_array = json_data["data"]  # Parse JSON response
+            result_list = []
+            for item in data_array:
+                doc_url = (
+                    "https://www.oceanbase.com/docs/"
+                    + item["urlCode"]
+                    + "-"
+                    + item["id"]
+                )
+                logger.info(f"doc_url:${doc_url}")
+                content = get_ob_doc_content(doc_url, item["id"])
+                result_list.append(content)
+            return json.dumps(result_list, ensure_ascii=False)
+    except error.HTTPError as e:
+        logger.error(f"HTTP Error: {e.code} - {e.reason}")
+        return "No results were found"
+    except error.URLError as e:
+        logger.error(f"URL Error: {e.reason}")
+        return "No results were found"
+
+
+def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
+    doc_param = {"id": doc_id, "url": doc_url}
+    doc_param = json.dumps(doc_param).encode("utf-8")
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json",
+        "Origin": "https://www.oceanbase.com",
+        "Referer": "https://www.oceanbase.com/",
+    }
+    doc_api_url = "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v4/docDetails"
+    req = request.Request(doc_api_url, data=doc_param, headers=headers, method="POST")
+    # 创建一个使用 certifi 的 SSL 上下文,解决https的报错问题
+    context = ssl.create_default_context(cafile=certifi.where())
+    try:
+        with request.urlopen(req, timeout=5, context=context) as response:
+            response_body = response.read().decode("utf-8")
+            json_data = json.loads(response_body)
+            # 返回的结果中主要需要data字段中的数据
+            data = json_data["data"]
+            # docContent字段中是HTML文本
+            soup = BeautifulSoup(data["docContent"], "html.parser")
+            # 去除script/style/nav/header/footer这些元素
+            for element in soup(["script", "style", "nav", "header", "footer"]):
+                element.decompose()
+            # 将HTML的标签去掉,只留文本
+            text = soup.get_text()
+            # 去除行前后的空格
+            lines = (line.strip() for line in text.splitlines())
+            # 去除空行
+            text = "\n".join(line for line in lines if line)
+            logger.info(f"text length:{len(text)}")
+            # 如果文本太长了,就只截取前8000的字符
+            if len(text) > 8000:
+                text = text[:8000] + "... [content truncated]"
+            # 重新组织下最后的结果,tdkInfo字段中包含文档的title/description/keyword这些信息
+            tdkInfo = data["tdkInfo"]
+            final_result = {
+                "title": tdkInfo["title"],
+                "description": tdkInfo["description"],
+                "keyword": tdkInfo["keyword"],
+                "content": text,
+                "oceanbase_version": data["version"],
+                "content_updatetime": data["docGmtModified"],
+            }
+            return final_result
+    except error.HTTPError as e:
+        logger.error(f"HTTP Error: {e.code} - {e.reason}")
+        return {"result": "No results were found"}
+    except error.URLError as e:
+        logger.error(f"URL Error: {e.reason}")
+        return {"result": "No results were found"}
 
 
 def main(transport: Literal["stdio", "sse"] = "stdio", port: int = 8000):
