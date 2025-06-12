@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import Dict, Literal, Optional
+from typing import Dict, Optional
 from urllib import request, error
 import json
 import argparse
