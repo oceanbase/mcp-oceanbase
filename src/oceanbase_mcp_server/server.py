@@ -4,7 +4,7 @@ import time
 from typing import Dict, Literal, Optional
 from urllib import request, error
 import json
-
+import argparse
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from mysql.connector import Error, connect
@@ -390,12 +390,25 @@ def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
         return {"result": "No results were found"}
 
 
-def main(transport: Literal["stdio", "sse"] = "stdio", port: int = 8000):
+def main():
     """Main entry point to run the MCP server."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--transport",
+        type=str,
+        default="stdio",
+        help="Specify the MCP server transport type as stdio or sse.",
+    )
+    parser.add_argument("--host", default="127.0.0.1", help="SSE Host to bind to")
+    parser.add_argument("--port", type=int, default=8000, help="SSE Port to listen on")
+    args = parser.parse_args()
+    transport = args.transport
     logger.info(f"Starting OceanBase MCP server with {transport} mode...")
-    app.settings.port = port
+    if transport == "sse":
+        app.settings.host = args.host
+        app.settings.port = args.port
     app.run(transport=transport)
 
 
 if __name__ == "__main__":
-    app.run()
+    main()

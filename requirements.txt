@@ -2,4 +2,7 @@ mcp>=1.0.0
 fastmcp>=1.0.0
 mysql-connector-python>=9.1.0
 python-dotenv
+beautifulsoup4>=4.13.3
+certifi>=2025.4.26
 requests
+

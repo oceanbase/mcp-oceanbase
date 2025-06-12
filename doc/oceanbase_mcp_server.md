@@ -22,22 +22,28 @@ This server allows AI assistants to list tables, read data, and execute SQL quer
 
 ## Install
 
+### Clone the repository
 ```bash
-# Clone the repository
 git clone https://github.com/oceanbase/mcp-oceanbase.git
 cd mcp-oceanbase
-
-# Install the Python package manager uv and create virtual environment
+```
+### Install the Python package manager uv and create virtual environment
+```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv
 source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
-
-# If you configure the OceanBase connection information using .env file. You should copy .env.template to .env and modify .env
+```
+### If you configure the OceanBase connection information using .env file. You should copy .env.template to .env and modify .env
+```bash
 cp .env.template .env
-
-# Install dependencies
+```
+### If the dependency packages cannot be downloaded via UV due to network issues, you can change the mirror source to the Alibaba Cloud mirror source.
+```bash
+export UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple/"
+```
+### Install dependencies
+```bash
 uv pip install .
-
 ```
 ## Configuration
 There are two ways to configure the connection information of OceanBase
@@ -81,10 +87,15 @@ Add the following content to the configuration file that supports the MCP server
 ```
 ### SSE Mode
 Within the mcp-oceanbase directory, execute the following command, the port can be customized as desired.<br>
-'--transport': Specify the MCP server transport type as stdio or sse, default is stdio.<br>
-'--port': Specify sse port to listen on, default is 8000
+'--transport': MCP server transport type as stdio or sse, default is stdio.<br>
+'--host': SSE Host to bind to, default is 127.0.0.1, that is to say, you can only access it on your local computer.If you want any client to be able to access it, you can set the host to 0.0.0.0.
+'--port': sse port to listen on, default is 8000
 ```bash
 uv run oceanbase_mcp_server --transport sse --port 8000
+```
+If you don't want to use uv, you can start it in the following way:
+```bash
+cd src/oceanbase_mcp_server/ && python3 -m server --transport sse --port 9000
 ```
 
 ## Security Considerations
