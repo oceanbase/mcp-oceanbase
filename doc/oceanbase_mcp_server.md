@@ -87,13 +87,13 @@ Add the following content to the configuration file that supports the MCP server
 ```
 ### SSE Mode
 Within the mcp-oceanbase directory, execute the following command, the port can be customized as desired.<br>
-'--transport': MCP server transport type as stdio or sse, default is stdio.<br>
-'--host': SSE Host to bind to, default is 127.0.0.1, that is to say, you can only access it on your local computer.If you want any client to be able to access it, you can set the host to 0.0.0.0.
+'--transport': MCP server transport type as stdio or sse, default is stdio<br>
+'--host': sse Host to bind to, default is 127.0.0.1, that is to say, you can only access it on your local computer. If you want any remote client to be able to access it, you can set the host to 0.0.0.0<br>
 '--port': sse port to listen on, default is 8000
 ```bash
 uv run oceanbase_mcp_server --transport sse --port 8000
 ```
-If you don't want to use uv, you can start it in the following way:
+If you don't want to use uv, you can start it in the following way
 ```bash
 cd src/oceanbase_mcp_server/ && python3 -m server --transport sse --port 9000
 ```
