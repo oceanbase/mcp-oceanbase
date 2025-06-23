@@ -97,6 +97,7 @@ If you don't want to use uv, you can start it in the following way
 ```bash
 cd src/oceanbase_mcp_server/ && python3 -m server --transport sse --port 9000
 ```
+The URL address for the general SSE mode configuration is `http://ip:port/sse`
 
 ## Security Considerations
 
