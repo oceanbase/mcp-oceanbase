@@ -13,8 +13,6 @@
 from fastmcp import FastMCP
 from pathlib import Path
 import importlib
-import subprocess
-import os
 import sys
 
 
