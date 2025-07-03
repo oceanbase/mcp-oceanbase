@@ -14,32 +14,21 @@ from fastmcp import FastMCP
 from pathlib import Path
 import importlib
 import subprocess
+import os
+import sys
 
 
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 mcp = FastMCP("OBDiag MCP Server")
 
 # 动态加载tools目录下的所有模块
 for tool_file in Path(__file__).parent.glob("tools/*.py"):
     if tool_file.name == "__init__.py":
         continue
-    module = importlib.import_module(
-        f"obdiag_mcp.tools.{tool_file.stem}", package="obdiag_mcp"
-    )
+    module = importlib.import_module(f"src.obdiag_mcp_server.tools.{tool_file.stem}")
     if hasattr(module, "register_tools"):
         module.register_tools(mcp)
 
 # 启动 MCP 服务
 if __name__ == "__main__":
-    # 检查是否还存在其他的 MCP 实例
-    check_old_mcp = subprocess.run(
-        "ps -ef | grep obdiag_mcpserver.py | grep -v grep",
-        shell=True,
-        text=True,
-        capture_output=True,
-    )
-    if check_old_mcp.returncode == 0:
-        print(
-            "MCP server is already running. Please stop it before starting a new one."
-        )
-        exit(1)
     mcp.run(transport="streamable-http", host="0.0.0.0", port=8000, path="/mcp")
