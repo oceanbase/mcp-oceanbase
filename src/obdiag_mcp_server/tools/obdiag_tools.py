@@ -42,3 +42,11 @@ def register_tools(mcp: FastMCP):
         :return: 指令执行的输出结果
         """
         return run_obdiag_command("obdiag check run")
+
+    @mcp.tool()
+    async def obdiag_analyze_log() -> str:
+        """
+        分析集群日志，找出发生过的错误信息并返回
+        :return: 指令执行的输出结果
+        """
+        return run_obdiag_command("obdiag analyze log")
