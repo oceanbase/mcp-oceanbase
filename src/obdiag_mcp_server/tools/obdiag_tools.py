@@ -22,7 +22,12 @@ def run_obdiag_command(command: str) -> str:
     """
     try:
         # 使用 subprocess 执行命令
-        result = subprocess.run(f"{command} --inner_config obdiag.logger.silent=Ture", shell=True, text=True, capture_output=True)
+        result = subprocess.run(
+            f"{command} --inner_config obdiag.logger.silent=Ture",
+            shell=True,
+            text=True,
+            capture_output=True,
+        )
         # 返回标准输出或错误输出
         return result.stdout if result.returncode == 0 else f"Error: {result.stderr}"
     except Exception as e:
