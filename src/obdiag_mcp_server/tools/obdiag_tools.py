@@ -50,3 +50,30 @@ def register_tools(mcp: FastMCP):
         :return: 指令执行的输出结果
         """
         return run_obdiag_command("obdiag analyze log")
+
+    @mcp.tool()
+    async def obdiag_display_list() -> str:
+        """
+        obdiag 集群信息查询功能功能，返回支持的指令列表
+        :return: 支持的指令列表
+        """
+
+        return run_obdiag_command("obdiag display scene list")
+
+    @mcp.tool()
+    async def obdiag_display_run(scene: str, env_dict: dict = None) -> str:
+        """
+        obdiag 集群信息查询功能，执行获取的指令列表，需要功能来自obdiag_display_list的返回结果。只需要返回obdiag_display_list结果
+        :param scene: 指令名，来自obdiag_display_list的返回结果，如 'obdiag display scene run --scene=observer.all_tenant',则赋值 scene=observer.all_tenant
+        :param env_dict: 环境变量，来自obdiag_display_list的返回结果,只有在要求填入env的时候才需要赋值，如 'oobdiag display scene run --scene=observer.index --env database_name=test --env table_name=test',则赋值 env_dict={'database_name':'test','table_name':'test'}
+        :return: 洞察结果
+        """
+        if env_dict is None:
+            env_dict = {}
+        cmd = "obdiag display scene run --scene={}".format(scene)
+        if env_dict:
+            for env in env_dict:
+                env_name = env
+                env_value = env_dict[env]
+                cmd += " --env {}={}".format(env_name, env_value)
+        return run_obdiag_command(cmd)
