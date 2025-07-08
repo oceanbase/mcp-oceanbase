@@ -9,11 +9,12 @@ English | [简体中文](README_CN.md)
 This repository contains MCP Servers as following:
 
 | MCP Server           | Description                                                                                            | Document                                |
-| -------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------- |
+|----------------------|--------------------------------------------------------------------------------------------------------|-----------------------------------------|
 | OceanBase MCP Server | A Model Context Protocol (MCP) server that enables secure interaction with OceanBase databases.        | [Doc](doc/oceanbase_mcp_server.md)      |
 | OCP MCP Server       | A Model Context Protocol (MCP) server that enables secure interaction with OCP.                        | [Doc](doc/ocp_mcp_server.md)            |
 | OBCloud MCP Server   | A Model Context Protocol (MCP) server that enables secure interaction with OBCloud.                    | [Doc](src/obcloud_mcp_server/README.md) |
 | OKCTL MCP Server     | A Model Context Protocol (MCP) server that enables secure interaction with OceanBase resources in k8s. | [Doc](doc/okctl_mcp_server.md)          |
+| obdiag MCP Server    | A Model Context Protocol (MCP) server that enables secure interaction with obdiag.                     | [Doc](doc/obdiag_mcp_server.md)         |
 
 ## Community
 
