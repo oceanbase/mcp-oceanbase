@@ -29,17 +29,22 @@ for tool_file in Path(__file__).parent.glob("tools/*.py"):
     if hasattr(module, "register_tools"):
         module.register_tools(mcp)
 
+
 # 确认obdiag是否安装,是否存在 obdiag 命令
 def check_obdiag_installed():
     try:
         return shutil.which("obdiag") is not None
     except ImportError:
         return False
+
+
 def check_config_exist():
     try:
         return Path(os.path.expanduser("~/.obdiag/config.yml")).exists()
     except ImportError:
         return False
+
+
 # 启动 MCP 服务
 if __name__ == "__main__":
     if not check_obdiag_installed():
