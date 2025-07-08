@@ -53,4 +53,19 @@ if __name__ == "__main__":
     if not check_config_exist():
         print("obdiag config is not exist, please check ~/.obdiag/config.yml is exist")
         sys.exit(1)
-    mcp.run(transport="streamable-http", host="0.0.0.0", port=8000, path="/mcp")
+    # 根据输入的参数，判别是使用stdio还是sse还是streamable-http,如果是sse还是streamable-http，则需要指定port
+    if len(sys.argv) > 1 and sys.argv[1] == "stdio":
+        print("run mcp with stdio")
+        mcp.run(transport="stdio")
+    elif len(sys.argv) > 1 and sys.argv[1] == "sse":
+        print("run mcp with sse")
+        if len(sys.argv) > 2:
+            mcp.run(transport="sse", host="0.0.0.0", port=int(sys.argv[2]), path="/mcp")
+        else:
+            mcp.run(transport="sse", host="0.0.0.0", port=8000, path="/mcp")
+    else:
+        print("run mcp with streamable-http")
+        if len(sys.argv) > 1:
+            mcp.run(transport="streamable-http", host="0.0.0.0", port=int(sys.argv[2]), path="/mcp")
+        else:
+            mcp.run(transport="streamable-http", host="0.0.0.0", port=8000, path="/mcp")
