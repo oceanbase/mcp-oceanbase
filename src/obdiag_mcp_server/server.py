@@ -66,6 +66,11 @@ if __name__ == "__main__":
     else:
         print("run mcp with streamable-http")
         if len(sys.argv) > 1:
-            mcp.run(transport="streamable-http", host="0.0.0.0", port=int(sys.argv[2]), path="/mcp")
+            mcp.run(
+                transport="streamable-http",
+                host="0.0.0.0",
+                port=int(sys.argv[2]),
+                path="/mcp",
+            )
         else:
             mcp.run(transport="streamable-http", host="0.0.0.0", port=8000, path="/mcp")
