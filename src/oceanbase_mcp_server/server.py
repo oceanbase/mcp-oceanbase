@@ -96,9 +96,7 @@ def configure_db_connection(
     }
 
     # Check if all required parameters are provided
-    missing_params = [
-        key for key in ["user", "database"] if not config.get(key)
-    ]
+    missing_params = [key for key in ["user", "database"] if not config.get(key)]
     if missing_params:
         logger.error(
             "Missing required database configuration. Please check the following parameters: %s",
