@@ -123,31 +123,31 @@ def configure_db_connection(
 
 
 @app.tool()
-def execute_sql(query: str) -> str:
-    """Execute an SQL query on the OceanBase server."""
+def execute_sql(sql: str) -> str:
+    """Execute an SQL on the OceanBase server."""
     config = configure_db_connection()
-    logger.info(f"Calling tool: execute_sql  with arguments: {query}")
+    logger.info(f"Calling tool: execute_sql  with arguments: {sql}")
 
     try:
         with connect(**config) as conn:
             with conn.cursor() as cursor:
-                cursor.execute(query)
+                cursor.execute(sql)
 
                 # Special handling for SHOW TABLES
-                if query.strip().upper().startswith("SHOW TABLES"):
+                if sql.strip().upper().startswith("SHOW TABLES"):
                     tables = cursor.fetchall()
                     result = [f"Tables in {config['database']}: "]  # Header
                     result.extend([table[0] for table in tables])
                     return "\n".join(result)
 
-                elif query.strip().upper().startswith("SHOW COLUMNS"):
+                elif sql.strip().upper().startswith("SHOW COLUMNS"):
                     resp_header = "Columns info of this table: \n"
                     columns = [desc[0] for desc in cursor.description]
                     rows = cursor.fetchall()
                     result = [",".join(map(str, row)) for row in rows]
                     return resp_header + ("\n".join([",".join(columns)] + result))
 
-                elif query.strip().upper().startswith("DESCRIBE"):
+                elif sql.strip().upper().startswith("DESCRIBE"):
                     resp_header = "Description of this table: \n"
                     columns = [desc[0] for desc in cursor.description]
                     rows = cursor.fetchall()
@@ -155,18 +155,18 @@ def execute_sql(query: str) -> str:
                     return resp_header + ("\n".join([",".join(columns)] + result))
 
                 # Regular SELECT queries
-                elif query.strip().upper().startswith("SELECT"):
+                elif sql.strip().upper().startswith("SELECT"):
                     columns = [desc[0] for desc in cursor.description]
                     rows = cursor.fetchall()
                     result = [",".join(map(str, row)) for row in rows]
                     return "\n".join([",".join(columns)] + result)
 
                 # Regular SHOW queries
-                elif query.strip().upper().startswith("SHOW"):
+                elif sql.strip().upper().startswith("SHOW"):
                     rows = cursor.fetchall()
-                    return rows
+                    return str(rows)
                 # process procedural invoke
-                elif query.strip().upper().startswith("CALL"):
+                elif sql.strip().upper().startswith("CALL"):
                     rows = cursor.fetchall()
                     if not rows:
                         return "No result return."
@@ -176,12 +176,12 @@ def execute_sql(query: str) -> str:
                 else:
                     conn.commit()
                     return (
-                        f"Query executed successfully. Rows affected: {cursor.rowcount}"
+                        f"Sql executed successfully. Rows affected: {cursor.rowcount}"
                     )
 
     except Error as e:
-        logger.error(f"Error executing SQL '{query}': {e}")
-        return f"Error executing query: {str(e)}"
+        logger.error(f"Error executing SQL '{sql}': {e}")
+        return f"Error executing sql: {str(e)}"
 
 
 @app.tool()
