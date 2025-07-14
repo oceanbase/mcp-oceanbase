@@ -1,3 +1,4 @@
+English | [简体中文](oceanbase_mcp_server_CN.md)<br>
 # OceanBase MCP Server
 
 A Model Context Protocol (MCP) server that enables secure interaction with OceanBase databases. 
@@ -37,7 +38,7 @@ source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
 ```bash
 cp .env.template .env
 ```
-### If the dependency packages cannot be downloaded via UV due to network issues, you can change the mirror source to the Alibaba Cloud mirror source.
+### If the dependency packages cannot be downloaded via uv due to network issues, you can change the mirror source to the Alibaba Cloud mirror source.
 ```bash
 export UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple/"
 ```
@@ -59,7 +60,7 @@ OB_DATABASE=your_database
 2. Configure in the .env file
 ## Usage
 
-### Stdio Mode
+### stdio Mode
 
 Add the following content to the configuration file that supports the MCP server client:
 
@@ -85,7 +86,7 @@ Add the following content to the configuration file that supports the MCP server
   }
 }
 ```
-### SSE Mode
+### sse Mode
 Within the mcp-oceanbase directory, execute the following command, the port can be customized as desired.<br>
 '--transport': MCP server transport type as stdio or sse, default is stdio<br>
 '--host': sse Host to bind to, default is 127.0.0.1, that is to say, you can only access it on your local computer. If you want any remote client to be able to access it, you can set the host to 0.0.0.0<br>
