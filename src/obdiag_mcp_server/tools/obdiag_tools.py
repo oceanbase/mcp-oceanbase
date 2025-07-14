@@ -14,7 +14,7 @@ from fastmcp import FastMCP
 import subprocess
 
 
-def run_obdiag_command(command: str, silent = True) -> str:
+def run_obdiag_command(command: str, silent=True) -> str:
     """
     运行 obdiag 命令并返回结果
     :param command: 完整的 obdiag 命令
