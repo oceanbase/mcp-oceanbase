@@ -14,16 +14,21 @@ from fastmcp import FastMCP
 import subprocess
 
 
-def run_obdiag_command(command: str) -> str:
+def run_obdiag_command(command: str, silent = True) -> str:
     """
     运行 obdiag 命令并返回结果
     :param command: 完整的 obdiag 命令
+    :param silent: 是否静默执行
     :return: 指令执行的输出结果
     """
     try:
+        if silent:
+            command += " --inner_config obdiag.logger.silent=Ture"
+        else:
+            pass
         # 使用 subprocess 执行命令
         result = subprocess.run(
-            f"{command} --inner_config obdiag.logger.silent=Ture",
+            command,
             shell=True,
             text=True,
             capture_output=True,
@@ -76,4 +81,4 @@ def register_tools(mcp: FastMCP):
                 env_name = env
                 env_value = env_dict[env]
                 cmd += " --env {}={}".format(env_name, env_value)
-        return run_obdiag_command(cmd)
+        return run_obdiag_command(cmd, silent=False)
