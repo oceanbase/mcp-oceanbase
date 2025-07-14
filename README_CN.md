@@ -10,7 +10,7 @@ OceanBase 数据库及其工具的 MCP Server
 
 | MCP Server           | 描述                                      | 使用文档                                    |
 |----------------------|-----------------------------------------|-----------------------------------------|
-| OceanBase MCP Server | 一个可以和 OceanBase 数据库安全交互的MCP Server。     | [Doc](doc/oceanbase_mcp_server.md)      |
+| OceanBase MCP Server | 一个可以和 OceanBase 数据库安全交互的MCP Server。     | [Doc](doc/oceanbase_mcp_server_CN.md)      |
 | OCP MCP Server       | 一个可以和 OCP 交互的 MCP Server。               | [Doc](doc/ocp_mcp_server_CN.md)         |
 | OBCloud MCP Server   | 一个可以和 OBCloud 交互的 MCP Server。           | [Doc](src/obcloud_mcp_server/README.md) |
 | OKCTL MCP Server     | 一个可以和 OceanBase 资源在 k8s 交互的 MCP Server。 | [Doc](doc/okctl_mcp_server_CN.md)       |
