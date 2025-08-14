@@ -27,7 +27,7 @@ OceanBase MCP Server 通过 MCP (模型上下文协议) 可以和 OceanBase 进�
 ### 克隆仓库
 ```bash
 git clone https://github.com/oceanbase/mcp-oceanbase.git
-cd mcp-oceanbase
+cd mcp-oceanbase/src/oceanbase_mcp_server
 ```
 ### 安装 Python 包管理器 uv 并创建虚拟环境
 ```bash
@@ -69,7 +69,7 @@ OB_DATABASE=your_database
       "command": "uv",
       "args": [
         "--directory", 
-        "path/to/mcp-oceanbase",
+        "path/to/mcp-oceanbase/src/oceanbase_mcp_server",
         "run",
         "oceanbase_mcp_server"
       ],
@@ -85,7 +85,7 @@ OB_DATABASE=your_database
 }
 ```
 ### sse 模式
-在 mcp-oceanbase 目录下，执行下面的命令，端口号是可配置的。<br>
+在 mcp-oceanbase/src/oceanbase_mcp_server 目录下，执行下面的命令，端口号是可配置的。<br>
 '--transport'： MCP 的传输模式，stdio 或者 sse，默认是 stdio<br>
 '--host'： sse 模式绑定的 host，默认是 127.0.0.1，也就是只能本机访问，如果需要远程访问，可以设置为 0.0.0.0<br>
 '--port'： sse 模式监听的端口，默认是 8000
@@ -94,7 +94,7 @@ uv run oceanbase_mcp_server --transport sse --port 8000
 ```
 如果不想使用 uv，也可以用下面的方式启动
 ```bash
-cd src/oceanbase_mcp_server/ && python3 -m server --transport sse --port 9000
+cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
 ```
 sse 模式访问地址示例： `http://ip:port/sse`
 

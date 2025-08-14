@@ -26,7 +26,7 @@ This server allows AI assistants to list tables, read data, and execute SQL quer
 ### Clone the repository
 ```bash
 git clone https://github.com/oceanbase/mcp-oceanbase.git
-cd mcp-oceanbase
+cd mcp-oceanbase/src/oceanbase_mcp_server
 ```
 ### Install the Python package manager uv and create virtual environment
 ```bash
@@ -71,7 +71,7 @@ Add the following content to the configuration file that supports the MCP server
       "command": "uv",
       "args": [
         "--directory", 
-        "path/to/mcp-oceanbase",
+        "path/to/mcp-oceanbase/src/oceanbase_mcp_server",
         "run",
         "oceanbase_mcp_server"
       ],
@@ -96,7 +96,7 @@ uv run oceanbase_mcp_server --transport sse --port 8000
 ```
 If you don't want to use uv, you can start it in the following way
 ```bash
-cd src/oceanbase_mcp_server/ && python3 -m server --transport sse --port 9000
+cd oceanbase_mcp/ && python3 -m server --transport sse --port 9000
 ```
 The URL address for the general SSE mode configuration is `http://ip:port/sse`
 

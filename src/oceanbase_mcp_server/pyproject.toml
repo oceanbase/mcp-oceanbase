@@ -1,8 +1,18 @@
 [project]
-name = "mcp-oceanbase"
-version = "0.1.0"
+name = "oceanbase-mcp"
+version = "0.0.1"
 description = "A Model Context Protocol (MCP) server that enables secure interaction with OceanBase databases. This server allows AI assistants to list tables, read data, and execute SQL queries through a controlled interface, making database exploration and analysis safer and more structured."
 readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+keywords = [
+    "oceanbase",
+    "mcp",
+]
 requires-python = ">=3.11"
 dependencies = [
     "mcp[cli]>=1.0.0",
@@ -14,23 +24,9 @@ dependencies = [
     "requests"
 ]
 
-[[project.authors]]
-name = "OceanBase"
-email = "open_contact@oceanbase.com"
+[project.scripts]
+oceanbase_mcp_server = "oceanbase_mcp.server:main"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build]
-include = [
-    "src/ocp_mcp_server/**/*.py",
-    "src/okctl_mcp_server/**/*.py"
-]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/ocp_mcp_server","src/okctl_mcp_server"]
-
-[project.scripts]
-ocp_mcp_server = "ocp_mcp_server:main"
-okctl_mcp_server = "okctl_mcp_server:main"
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
