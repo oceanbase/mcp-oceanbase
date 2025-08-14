@@ -1,4 +1,3 @@
-English | [简体中文](README_CN.md)<br>
 # OceanBase MCP Server
 
 A Model Context Protocol (MCP) server that enables secure interaction with OceanBase databases. 
