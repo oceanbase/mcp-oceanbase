@@ -4,7 +4,7 @@
   </a>
 </p>
 
-English | [Chinese](README_CN.md)
+English | [Chinese](obshell_mcp_server_CN.md)
 
 # obshell-mcp
 
