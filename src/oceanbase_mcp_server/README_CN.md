@@ -36,7 +36,7 @@ export UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple/"
 ```
 ### 安装 OceanBase MCP Server
 ```bash
-uv pip install oceanbase-mcp-server
+uv pip install oceanbase-mcp
 ```
 ## 配置
 有两种方式可以配置 OceanBase 的连接信息
@@ -67,7 +67,7 @@ OB_DATABASE=your_database
     "oceanbase": {
       "command": "uvx",
       "args": [
-        "oceanbase_mcp_server"
+        "oceanbase-mcp"
       ],
       "env": {
         "OB_HOST": "localhost",
