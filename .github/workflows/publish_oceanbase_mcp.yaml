@@ -45,7 +45,7 @@ jobs:
               ;;
             # add more packages here
             *)
-              echo "Unsupported tag: $TAG" >&2
+              echo "Unsupported component: $component" >&2
               exit 1
               ;;
           esac
