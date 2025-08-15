@@ -269,7 +269,7 @@ def call_obshell_sdk(sdk_method: str, args: Dict[str, Any]):
                     zone_objects.append(zone_param)
                 else:
                     raise Exception(
-                        f"zone_list 参数格式错误：缺少必要字段 zone 或 unit_config/unit_config_name"
+                        "zone_list 参数格式错误：缺少必要字段 zone 或 unit_config/unit_config_name"
                     )
             else:
                 zone_objects.append(zone_data)  # 已经是对象
