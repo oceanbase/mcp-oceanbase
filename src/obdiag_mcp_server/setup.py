@@ -7,6 +7,7 @@ Setup script for OBDiag MCP Server
 from setuptools import setup, find_packages
 import os
 
+
 # Read the README file
 def read_readme():
     readme_path = os.path.join(os.path.dirname(__file__), "README.md")
@@ -15,11 +16,13 @@ def read_readme():
             return f.read()
     return ""
 
+
 # Read requirements from pyproject.toml
 def get_requirements():
     requirements = []
     try:
         import tomllib
+
         with open("pyproject.toml", "rb") as f:
             data = tomllib.load(f)
             requirements = data.get("project", {}).get("dependencies", [])
@@ -27,6 +30,7 @@ def get_requirements():
         # Fallback for Python < 3.11
         try:
             import tomli as tomllib
+
             with open("pyproject.toml", "rb") as f:
                 data = tomllib.load(f)
                 requirements = data.get("project", {}).get("dependencies", [])
@@ -37,6 +41,7 @@ def get_requirements():
                 "uvicorn>=0.27.1",
             ]
     return requirements
+
 
 setup(
     name="obdiag-mcp",
@@ -101,4 +106,3 @@ setup(
         "Community": "https://ask.oceanbase.com",
     },
 )
-
