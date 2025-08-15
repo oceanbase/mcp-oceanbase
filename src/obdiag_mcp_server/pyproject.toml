@@ -1,0 +1,72 @@
+[project]
+name = "obdiag-mcp"
+version = "0.0.1"
+description = "OBDiag MCP Server - Model Context Protocol server for OceanBase Diagnostic Tool"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "OceanBase", email = "support@oceanbase.com" }
+]
+maintainers = [
+    { name = "OceanBase", email = "support@oceanbase.com" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Topic :: System :: Monitoring",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = [
+    "oceanbase",
+    "obdiag",
+    "mcp",
+    "diagnostic",
+    "database",
+    "monitoring",
+]
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=1.0",
+    "uvicorn>=0.27.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.991",
+    "build>=0.10.0",
+    "twine>=4.0.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.scripts]
+obdiag-mcp = "obdiag_mcp.server:main"
+
+[project.urls]
+"Bug Reports" = "https://github.com/oceanbase/mcp-oceanbase/issues"
+"Source" = "https://github.com/oceanbase/mcp-oceanbase"
+"Documentation" = "https://www.oceanbase.com/docs"
+"Community" = "https://ask.oceanbase.com"
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = {find = {}}
+include-package-data = true
+zip-safe = false
