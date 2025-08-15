@@ -27,8 +27,6 @@ global_config = None
 def _patched_run_sse_async(self, mount_path=None):
     from uvicorn import Config, Server
 
-    print("patch")
-
     starlette_app = self.sse_app(mount_path)
     config = Config(
         starlette_app,
