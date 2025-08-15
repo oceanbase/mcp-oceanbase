@@ -11,7 +11,7 @@ import sys
 mcp = FastMCP("obshell-mcp")
 
 client = None
-SYS_PASSWORD =  os.getenv("SYS_PASSWORD", "password")
+SYS_PASSWORD = os.getenv("SYS_PASSWORD", "password")
 OBSHELL_HOST = os.getenv("OBSHELL_HOST", "127.0.0.1")
 OBSHELL_PORT = os.getenv("OBSHELL_PORT", "2886")
 OBSHELL_PORT = int(OBSHELL_PORT)
@@ -95,13 +95,19 @@ create_tenant_desc = f"""Create a tenant synchronously.The tenant name has been 
             include the failed task detail and logs.
 """
 
+
 # @mcp.tool()
-def connect(host: str = OBSHELL_HOST, port: int = OBSHELL_PORT, password: str = SYS_PASSWORD, timeout: int = 600):    
+def connect(
+    host: str = OBSHELL_HOST,
+    port: int = OBSHELL_PORT,
+    password: str = SYS_PASSWORD,
+    timeout: int = 600,
+):
     """连接 obshell 服务
     参数:
         host: obshell 服务地址, 默认为 "127.0.0.1"
         port: obshell 服务端口, 默认为 "2886"
-        password: sys 租户的 root 密码, 默认为 
+        password: sys 租户的 root 密码, 默认为
         timeout: 时间戳超时时间，单位为秒，默认 600 秒
     返回:
         client: obshell 客户端实例，后续所有 obshell 的 sdk 方法，都需要使用该实例
@@ -116,6 +122,7 @@ def connect(host: str = OBSHELL_HOST, port: int = OBSHELL_PORT, password: str = 
         raise Exception("连接 obshell 服务失败: " + str(e))
     return client.v1.get_status()
 
+
 @mcp.tool(description=create_cluster_desc)
 def create_cluster(servers_with_configs: dict, cluster_id: int):
     root_pwd = SYS_PASSWORD
@@ -123,7 +130,13 @@ def create_cluster(servers_with_configs: dict, cluster_id: int):
     if client is None:
         connect()
     try:
-        client.v1.agg_create_cluster(servers_with_configs, CLUSTER_NAME, cluster_id, root_pwd, clear_if_failed = True)
+        client.v1.agg_create_cluster(
+            servers_with_configs,
+            CLUSTER_NAME,
+            cluster_id,
+            root_pwd,
+            clear_if_failed=True,
+        )
     except Exception as e:
         raise Exception("创建 ob 集群失败: " + str(e))
     client.v1._reset_auth()
@@ -131,13 +144,23 @@ def create_cluster(servers_with_configs: dict, cluster_id: int):
 
 
 @mcp.tool(description=create_tenant_desc)
-def create_tenant(zone_replica_type: Dict[str, str], memory_size: str = "2G", cpu_count: int = 1, unit_num: int = 1, 
+def create_tenant(
+    zone_replica_type: Dict[str, str],
+    memory_size: str = "2G",
+    cpu_count: int = 1,
+    unit_num: int = 1,
     log_disk_size: str = "",
-    mode: str = 'MYSQL',
-    primary_zone: str = "RANDOM", whitelist: str = "%",
-    scenario: str = None, import_script: bool = False,
-    charset: str = None, collation: str = None, read_only: bool = False,
-    comment: str = None, variables: dict = None, parameters: dict = None
+    mode: str = "MYSQL",
+    primary_zone: str = "RANDOM",
+    whitelist: str = "%",
+    scenario: str = None,
+    import_script: bool = False,
+    charset: str = None,
+    collation: str = None,
+    read_only: bool = False,
+    comment: str = None,
+    variables: dict = None,
+    parameters: dict = None,
 ):
     # Global variable `secure_file_priv` take a while to take effect, so we set it early (right after tenant creation)
     # if not variables:
@@ -151,10 +174,34 @@ def create_tenant(zone_replica_type: Dict[str, str], memory_size: str = "2G", cp
 
     # 创建一个新的 unit config
     unit_config_name = f"{TENANT_NAME}_unit_config_{int(time.time())}"
-    client.v1.create_resource_unit_config(unit_config_name, memory_size, cpu_count, log_disk_size = (None if log_disk_size == "" else log_disk_size))
+    client.v1.create_resource_unit_config(
+        unit_config_name,
+        memory_size,
+        cpu_count,
+        log_disk_size=(None if log_disk_size == "" else log_disk_size),
+    )
 
-    zone_list = [ZoneParam(zone, unit_config_name, unit_num, zone_replica_type.get(zone, "FULL")) for zone in zone_replica_type]
-    return client.v1.create_tenant_sync(TENANT_NAME, zone_list, mode, primary_zone, whitelist, root_password, scenario, import_script, charset, collation, read_only, comment, variables, parameters)
+    zone_list = [
+        ZoneParam(zone, unit_config_name, unit_num, zone_replica_type.get(zone, "FULL"))
+        for zone in zone_replica_type
+    ]
+    return client.v1.create_tenant_sync(
+        TENANT_NAME,
+        zone_list,
+        mode,
+        primary_zone,
+        whitelist,
+        root_password,
+        scenario,
+        import_script,
+        charset,
+        collation,
+        read_only,
+        comment,
+        variables,
+        parameters,
+    )
+
 
 @mcp.tool()
 def get_all_obshell_sdk_methods():
@@ -171,6 +218,7 @@ def get_all_obshell_sdk_methods():
             if callable(methed):
                 methods[method] = methed.__doc__
     return methods
+
 
 @mcp.tool()
 def get_obshell_sdk_methods_description(sdk_method: str):
@@ -200,31 +248,38 @@ def call_obshell_sdk(sdk_method: str, args: Dict[str, Any]):
 
     # 转换特殊参数格式
     processed_args = args.copy()
-    
+
     # 如果有 zone_list 参数，转换为 ZoneParam 对象列表
-    if 'zone_list' in processed_args and isinstance(processed_args['zone_list'], list):
+    if "zone_list" in processed_args and isinstance(processed_args["zone_list"], list):
         zone_objects = []
-        for zone_data in processed_args['zone_list']:
+        for zone_data in processed_args["zone_list"]:
             if isinstance(zone_data, dict):
                 # 创建 ZoneParam 对象
-                zone_name = zone_data.get('zone')
-                unit_config_name = zone_data.get('unit_config', zone_data.get('unit_config_name'))
-                unit_num = zone_data.get('unit_num', 1)
-                replica_type = zone_data.get('replica_type')
-                
+                zone_name = zone_data.get("zone")
+                unit_config_name = zone_data.get(
+                    "unit_config", zone_data.get("unit_config_name")
+                )
+                unit_num = zone_data.get("unit_num", 1)
+                replica_type = zone_data.get("replica_type")
+
                 if zone_name and unit_config_name:
-                    zone_param = ZoneParam(zone_name, unit_config_name, unit_num, replica_type)
+                    zone_param = ZoneParam(
+                        zone_name, unit_config_name, unit_num, replica_type
+                    )
                     zone_objects.append(zone_param)
                 else:
-                    raise Exception(f"zone_list 参数格式错误：缺少必要字段 zone 或 unit_config/unit_config_name")
+                    raise Exception(
+                        f"zone_list 参数格式错误：缺少必要字段 zone 或 unit_config/unit_config_name"
+                    )
             else:
                 zone_objects.append(zone_data)  # 已经是对象
-        processed_args['zone_list'] = zone_objects
-    
+        processed_args["zone_list"] = zone_objects
+
     try:
         return getattr(client.v1, sdk_method)(**processed_args)
     except Exception as e:
         raise Exception("调用 obshell 的 sdk 方法失败: " + str(e))
+
 
 def main():
     SSE = False
@@ -234,15 +289,12 @@ def main():
         if len(sys.argv) > 2:
             SSE_PORT = int(sys.argv[2])
         else:
-            SSE_PORT = 8000 
+            SSE_PORT = 8000
     if SSE:
-        mcp.run(transport="sse", host="0.0.0.0", port=SSE_PORT, path='/obshell')
+        mcp.run(transport="sse", host="0.0.0.0", port=SSE_PORT, path="/obshell")
     else:
         mcp.run()
 
 
 if __name__ == "__main__":
     main()
-
-
-
