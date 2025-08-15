@@ -1,0 +1,29 @@
+[project]
+name = "obshell-mcp"
+version = "0.0.1"
+description = "obshell MCP Server"
+readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+]
+keywords = [
+    "oceanbase",
+    "obshell",
+    "mcp",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=1.0",
+    "uvicorn>=0.27.1",
+    "obshell>=0.0.6",
+]
+
+[project.scripts]
+obshell-mcp = "obshell_mcp.server:main"
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"

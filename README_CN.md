@@ -15,7 +15,7 @@ OceanBase 数据库及其工具的 MCP Server
 | OBCloud MCP Server   | 一个可以和 OBCloud 交互的 MCP Server。           | [Doc](src/obcloud_mcp_server/README.md) |
 | OKCTL MCP Server     | 一个可以和 OceanBase 资源在 k8s 交互的 MCP Server。 | [Doc](doc/okctl_mcp_server_CN.md)       |
 | OBDIAG MCP Server    | 一个可以和 obdiag MCP Server。                | [Doc](doc/obdiag_mcp_server_CN.md)      |
-
+| obshell MCP Server   | 一个可以通过 obshell 创建和运维 OceanBase 集群的 MCP Server。         | [Doc](doc/obshell_mcp_server_CN.md)     |
 
 ## 社区
 
