@@ -1,4 +1,3 @@
-English | [简体中文](oceanbase_mcp_server_CN.md)<br>
 # OceanBase MCP Server
 
 A Model Context Protocol (MCP) server that enables secure interaction with OceanBase databases. 
@@ -21,43 +20,40 @@ This server allows AI assistants to list tables, read data, and execute SQL quer
 - [✔️] Search OceanBase document from official website.
   This tool is experimental because the API on the official website may change.
 
-## Install
+## Install from PyPI Repository
 
-### Clone the repository
-```bash
-git clone https://github.com/oceanbase/mcp-oceanbase.git
-cd mcp-oceanbase/src/oceanbase_mcp_server
-```
 ### Install the Python package manager uv and create virtual environment
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv
 source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
 ```
-### If you configure the OceanBase connection information using .env file. You should copy .env.template to .env and modify .env
-```bash
-cp .env.template .env
-```
 ### If the dependency packages cannot be downloaded via uv due to network issues, you can change the mirror source to the Alibaba Cloud mirror source.
 ```bash
 export UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple/"
 ```
-### Install dependencies
+### Install OceanBase MCP Server
 ```bash
-uv pip install .
+uv pip install oceanbase-mcp
 ```
 ## Configuration
 There are two ways to configure the connection information of OceanBase
 1. Set the following environment variables:
 
 ```bash
+export OB_HOST=localhost     # Database host
+export OB_PORT=2881         # Optional: Database port (defaults to 2881 if not specified)
+export OB_USER=your_username
+export OB_PASSWORD=your_password
+export OB_DATABASE=your_database
+```
+2. Configure in the .env file
+Create an .env file in the directory where the OceanBase MCP Server command is executed, and fill in the following information
 OB_HOST=localhost     # Database host
 OB_PORT=2881         # Optional: Database port (defaults to 2881 if not specified)
 OB_USER=your_username
 OB_PASSWORD=your_password
 OB_DATABASE=your_database
-```
-2. Configure in the .env file
 ## Usage
 
 ### stdio Mode
@@ -68,12 +64,9 @@ Add the following content to the configuration file that supports the MCP server
 {
   "mcpServers": {
     "oceanbase": {
-      "command": "uv",
+      "command": "uvx",
       "args": [
-        "--directory", 
-        "path/to/mcp-oceanbase/src/oceanbase_mcp_server",
-        "run",
-        "oceanbase_mcp_server"
+        "oceanbase-mcp"
       ],
       "env": {
         "OB_HOST": "localhost",
@@ -92,17 +85,12 @@ Within the mcp-oceanbase directory, execute the following command, the port can 
 '--host': sse Host to bind to, default is 127.0.0.1, that is to say, you can only access it on your local computer. If you want any remote client to be able to access it, you can set the host to 0.0.0.0<br>
 '--port': sse port to listen on, default is 8000
 ```bash
-uv run oceanbase_mcp_server --transport sse --port 8000
-```
-If you don't want to use uv, you can start it in the following way
-```bash
-cd oceanbase_mcp/ && python3 -m server --transport sse --port 9000
+oceanbase_mcp_server --transport sse --port 8000
 ```
 The URL address for the general SSE mode configuration is `http://ip:port/sse`
 
 ## Security Considerations
 
-- Never commit environment variables or credentials
 - Use a database user with minimal required permissions
 - Consider implementing query whitelisting for production use
 - Monitor and log all database operations
@@ -128,12 +116,4 @@ See [OceanBase Security Configuration Guide](./SECURITY.md) for detailed instruc
 ## License
 
 Apache License - see LICENSE file for details.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 

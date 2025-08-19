@@ -21,6 +21,28 @@ logger = logging.getLogger("oceanbase_mcp_server")
 load_dotenv()
 global_config = None
 
+
+# 为了解决 OceanBase MCP Server 在打成 Wheel 包 install 后，按 CTRL + C 程序不结束的问题
+# ---------- 补丁开始 ----------
+def _patched_run_sse_async(self, mount_path=None):
+    from uvicorn import Config, Server
+
+    starlette_app = self.sse_app(mount_path)
+    config = Config(
+        starlette_app,
+        host=self.settings.host,
+        port=self.settings.port,
+        log_level=self.settings.log_level.lower(),
+        timeout_graceful_shutdown=0,  # 设置立即强制退出
+    )
+    server = Server(config)
+    return server.serve()
+
+
+# 把 FastMCP 原来的 run_sse_async 替换成自己的
+FastMCP.run_sse_async = _patched_run_sse_async
+# ---------- 补丁结束 ----------
+
 # Initialize server
 app = FastMCP("oceanbase_mcp_server")
 
@@ -61,7 +83,6 @@ def list_tables() -> str:
         return "Failed to list tables"
 
 
-@app.tool(name="configure_db_connection")
 def configure_db_connection(
     host: Optional[str] = None,
     port: Optional[int] = None,
