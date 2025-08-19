@@ -38,6 +38,9 @@ jobs:
             oceanbase-mcp-*)
               echo "src_dir=src/oceanbase_mcp_server" >> "$GITHUB_OUTPUT"
               ;;
+            obdiag-mcp-*)
+              echo "src_dir=src/obdiag_mcp_server" >> "$GITHUB_OUTPUT"
+              ;;
             # add more packages here
             *)
               echo "Unsupported tag: $TAG" >&2
