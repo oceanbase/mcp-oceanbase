@@ -20,6 +20,7 @@ import subprocess
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 mcp = FastMCP("OBDiag MCP Server")
 
+
 # 确认obdiag是否安装,是否存在 obdiag 命令
 def check_obdiag_installed():
     try:
@@ -33,6 +34,7 @@ def check_config_exist():
         return Path(os.path.expanduser("~/.obdiag/config.yml")).exists()
     except ImportError:
         return False
+
 
 def run_obdiag_command(command: str, silent=True) -> str:
     """
@@ -67,6 +69,7 @@ async def obdiag_check_run() -> str:
     """
     return run_obdiag_command("obdiag check run")
 
+
 @mcp.tool()
 async def obdiag_analyze_log() -> str:
     """
@@ -74,6 +77,7 @@ async def obdiag_analyze_log() -> str:
     :return: 指令执行的输出结果
     """
     return run_obdiag_command("obdiag analyze log")
+
 
 @mcp.tool()
 async def obdiag_display_list() -> str:
@@ -83,6 +87,7 @@ async def obdiag_display_list() -> str:
     """
 
     return run_obdiag_command("obdiag display scene list")
+
 
 @mcp.tool()
 async def obdiag_display_run(scene: str, env_dict: dict = None) -> str:
@@ -132,6 +137,7 @@ def main():
             )
         else:
             mcp.run(transport="streamable-http", host="0.0.0.0", port=8000, path="/mcp")
+
 
 if __name__ == "__main__":
     main()
