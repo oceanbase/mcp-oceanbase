@@ -25,7 +25,7 @@ mcp = FastMCP("OBDiag MCP Server")
 for tool_file in Path(__file__).parent.glob("tools/*.py"):
     if tool_file.name == "__init__.py":
         continue
-    module = importlib.import_module(f"src.obdiag_mcp_server.tools.{tool_file.stem}")
+    module = importlib.import_module(f"tools.{tool_file.stem}")
     if hasattr(module, "register_tools"):
         module.register_tools(mcp)
 
