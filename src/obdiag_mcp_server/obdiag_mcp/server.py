@@ -59,53 +59,52 @@ def run_obdiag_command(command: str, silent=True) -> str:
         return f"Exception occurred: {str(e)}"
 
 
-def register_tools(mcp: FastMCP):
-    @mcp.tool()
-    async def obdiag_check_run() -> str:
-        """
-        巡检集群，并返回巡检报告
-        :return: 指令执行的输出结果
-        """
-        return run_obdiag_command("obdiag check run")
+@mcp.tool()
+async def obdiag_check_run() -> str:
+    """
+    巡检集群，并返回巡检报告
+    :return: 指令执行的输出结果
+    """
+    return run_obdiag_command("obdiag check run")
 
-    @mcp.tool()
-    async def obdiag_analyze_log() -> str:
-        """
-        分析集群日志，找出发生过的错误信息并返回
-        :return: 指令执行的输出结果
-        """
-        return run_obdiag_command("obdiag analyze log")
+@mcp.tool()
+async def obdiag_analyze_log() -> str:
+    """
+    分析集群日志，找出发生过的错误信息并返回
+    :return: 指令执行的输出结果
+    """
+    return run_obdiag_command("obdiag analyze log")
 
-    @mcp.tool()
-    async def obdiag_display_list() -> str:
-        """
-        obdiag 集群信息查询功能功能，返回支持的指令列表
-        :return: 支持的指令列表
-        """
+@mcp.tool()
+async def obdiag_display_list() -> str:
+    """
+    obdiag 集群信息查询功能功能，返回支持的指令列表
+    :return: 支持的指令列表
+    """
 
-        return run_obdiag_command("obdiag display scene list")
+    return run_obdiag_command("obdiag display scene list")
 
-    @mcp.tool()
-    async def obdiag_display_run(scene: str, env_dict: dict = None) -> str:
-        """
-        obdiag 集群信息查询功能，执行获取的指令列表，需要功能来自obdiag_display_list的返回结果。只需要返回obdiag_display_list结果
-        :param scene: 指令名，来自obdiag_display_list的返回结果，如 'obdiag display scene run --scene=observer.all_tenant',则赋值 scene=observer.all_tenant
-        :param env_dict: 环境变量，来自obdiag_display_list的返回结果,只有在要求填入env的时候才需要赋值，如 'oobdiag display scene run --scene=observer.index --env database_name=test --env table_name=test',则赋值 env_dict={'database_name':'test','table_name':'test'}
-        :return: 洞察结果
-        """
-        if env_dict is None:
-            env_dict = {}
-        cmd = "obdiag display scene run --scene={}".format(scene)
-        if env_dict:
-            for env in env_dict:
-                env_name = env
-                env_value = env_dict[env]
-                cmd += " --env {}={}".format(env_name, env_value)
-        return run_obdiag_command(cmd, silent=False)
+@mcp.tool()
+async def obdiag_display_run(scene: str, env_dict: dict = None) -> str:
+    """
+    obdiag 集群信息查询功能，执行获取的指令列表，需要功能来自obdiag_display_list的返回结果。只需要返回obdiag_display_list结果
+    :param scene: 指令名，来自obdiag_display_list的返回结果，如 'obdiag display scene run --scene=observer.all_tenant',则赋值 scene=observer.all_tenant
+    :param env_dict: 环境变量，来自obdiag_display_list的返回结果,只有在要求填入env的时候才需要赋值，如 'oobdiag display scene run --scene=observer.index --env database_name=test --env table_name=test',则赋值 env_dict={'database_name':'test','table_name':'test'}
+    :return: 洞察结果
+    """
+    if env_dict is None:
+        env_dict = {}
+    cmd = "obdiag display scene run --scene={}".format(scene)
+    if env_dict:
+        for env in env_dict:
+            env_name = env
+            env_value = env_dict[env]
+            cmd += " --env {}={}".format(env_name, env_value)
+    return run_obdiag_command(cmd, silent=False)
 
 
 # 启动 MCP 服务
-if __name__ == "__main__":
+def main():
     if not check_obdiag_installed():
         print("obdiag is not installed, please install obdiag first")
         sys.exit(1)
@@ -133,3 +132,6 @@ if __name__ == "__main__":
             )
         else:
             mcp.run(transport="streamable-http", host="0.0.0.0", port=8000, path="/mcp")
+
+if __name__ == "__main__":
+    main()
