@@ -22,8 +22,8 @@ load_dotenv()
 global_config = None
 
 
-# 为了解决 OceanBase MCP Server 在打成 Wheel 包 install 后，按 CTRL + C 程序不结束的问题
-# ---------- 补丁开始 ----------
+# To fix the problem where the OceanBase MCP Server does not stop when you press CTRL + C after installing the Wheel package.
+# ---------- patch start ----------
 def _patched_run_sse_async(self, mount_path=None):
     from uvicorn import Config, Server
 
@@ -33,15 +33,15 @@ def _patched_run_sse_async(self, mount_path=None):
         host=self.settings.host,
         port=self.settings.port,
         log_level=self.settings.log_level.lower(),
-        timeout_graceful_shutdown=0,  # 设置立即强制退出
+        timeout_graceful_shutdown=0,  # Set to force quit
     )
     server = Server(config)
     return server.serve()
 
 
-# 把 FastMCP 原来的 run_sse_async 替换成自己的
+# Replace the old run_sse_async in FastMCP with own
 FastMCP.run_sse_async = _patched_run_sse_async
-# ---------- 补丁结束 ----------
+# ---------- patch end ----------
 
 # Initialize server
 app = FastMCP("oceanbase_mcp_server")
@@ -319,21 +319,21 @@ def search_oceanbase_document(keyword: str) -> str:
     }
     qeury_param = {
         "pageNo": 1,
-        "pageSize": 5,  # 一次搜索5条结果
+        "pageSize": 5,  # Search for 5 results at a time.
         "query": keyword,
     }
-    # 把字典转换为json字符串,然后编码为bytes
+    # Turn the dictionary into a JSON string, then change it to bytes
     qeury_param = json.dumps(qeury_param).encode("utf-8")
     req = request.Request(
         search_api_url, data=qeury_param, headers=headers, method="POST"
     )
-    # 创建一个使用 certifi 的 SSL 上下文,解决https的报错问题
+    # Create an SSL context using certifi to fix HTTPS errors.
     context = ssl.create_default_context(cafile=certifi.where())
     try:
         with request.urlopen(req, timeout=5, context=context) as response:
             response_body = response.read().decode("utf-8")
             json_data = json.loads(response_body)
-            # 返回的结果中主要需要data字段中的内容
+            # In the results, we mainly need the content in the data field.
             data_array = json_data["data"]  # Parse JSON response
             result_list = []
             for item in data_array:
@@ -367,30 +367,30 @@ def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
     }
     doc_api_url = "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v4/docDetails"
     req = request.Request(doc_api_url, data=doc_param, headers=headers, method="POST")
-    # 创建一个使用 certifi 的 SSL 上下文,解决https的报错问题
+    # Make an SSL context with certifi to fix HTTPS errors.
     context = ssl.create_default_context(cafile=certifi.where())
     try:
         with request.urlopen(req, timeout=5, context=context) as response:
             response_body = response.read().decode("utf-8")
             json_data = json.loads(response_body)
-            # 返回的结果中主要需要data字段中的数据
+            # In the results, we mainly need the content in the data field.
             data = json_data["data"]
-            # docContent字段中是HTML文本
+            # The docContent field has HTML text.
             soup = BeautifulSoup(data["docContent"], "html.parser")
-            # 去除script/style/nav/header/footer这些元素
+            # Remove script, style, nav, header, and footer elements.
             for element in soup(["script", "style", "nav", "header", "footer"]):
                 element.decompose()
-            # 将HTML的标签去掉,只留文本
+            # Remove HTML tags and keep only the text.
             text = soup.get_text()
-            # 去除行前后的空格
+            # Remove spaces at the beginning and end of each line.
             lines = (line.strip() for line in text.splitlines())
-            # 去除空行
+            # Remove empty lines.
             text = "\n".join(line for line in lines if line)
             logger.info(f"text length:{len(text)}")
-            # 如果文本太长了,就只截取前8000的字符
+            # If the text is too long, only keep the first 8000 characters.
             if len(text) > 8000:
                 text = text[:8000] + "... [content truncated]"
-            # 重新组织下最后的结果,tdkInfo字段中包含文档的title/description/keyword这些信息
+            # Reorganize the final result. The tdkInfo field should include the document's title, description, and keywords.
             tdkInfo = data["tdkInfo"]
             final_result = {
                 "title": tdkInfo["title"],
