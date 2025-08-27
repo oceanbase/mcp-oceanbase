@@ -127,18 +127,17 @@ def query_ocp_api(
     """
 
     Args:
-        method (str): HTTP request method, such as 'GET', 'POST', etc.  
-        md5payload (str): The MD5 value of the request body, usually an empty string  
-        request_path (str): API request path, starting with '/'  
-        query_param (dict): Request parameters in key/value dictionary format, can be None  
-        protocal (str, optional): Content type. Defaults to 'application/json'  
-        ocp_header (str, optional): OCP source identifier. Defaults to 'from-mcp'  
+        method (str): HTTP request method, such as 'GET', 'POST', etc.
+        md5payload (str): The MD5 value of the request body, usually an empty string
+        request_path (str): API request path, starting with '/'
+        query_param (dict): Request parameters in key/value dictionary format, can be None
+        protocal (str, optional): Content type. Defaults to 'application/json'
+        ocp_header (str, optional): OCP source identifier. Defaults to 'from-mcp'
 
     Returns:
         str: The JSON string of the API response
     """
     request_time = gen_rfc_time()
-
 
     param_str = ""
     if query_param:
