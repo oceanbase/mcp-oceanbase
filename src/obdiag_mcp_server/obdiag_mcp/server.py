@@ -106,6 +106,21 @@ async def obdiag_display_run(scene: str, env_dict: dict = None) -> str:
             cmd += " --env {}={}".format(env_name, env_value)
     return run_obdiag_command(cmd, silent=False)
 
+@mcp.tool()
+async def obdiag_gather_log(var: str) -> str:
+    """
+    obdiag 收集集群日志，根据需求添加参数或者默认不加任何参数收集日志
+    :param var: 可以根据不同的需求使用不同的参数：
+    1.按时间范围收集使用--from --to参数，例如obdiag gather log --from "2022-06-30 16:25:00" --to "2022-06-30 18:30:00"
+    2.按时间时长收集使用--since参数，例如收集1小时内的日志：obdiag gather log --since 1h
+    3.过滤关键字收集使用--grep参数，例如过滤TRACE_ID关键字：obdiag gather log --grep "TRACE_ID"，如果过滤多个关键字可以使用：obdiag gather log --from "2022-06-30 16:25:00" --to "2022-06-30 18:30:00" --grep "AAAAA" --grep "BBBBB"
+    4.选择收集的OceanBase集群日志类型使用--scope参数，可配置的值为：observer、election、rootservice、all，默认值为all，例如obdiag gather log --scope=all
+    5.选择存储结果的本地路径使用--store_dir参数，默认值为当前目录，例如obdiag gather log --store_dir=/home/obdiag/log
+    6.远端节点在日志收集过程中产生的临时文件存储路径使用--temp_dir参数，默认值为/tmp，例如obdiag gather log --temp_dir=/home/obdiag/log
+    :return: 指令执行的输出结果
+    """
+    cmd = "obdiag gather log {}".format(var)
+    return run_obdiag_command(cmd, silent=True)
 
 # 启动 MCP 服务
 def main():
