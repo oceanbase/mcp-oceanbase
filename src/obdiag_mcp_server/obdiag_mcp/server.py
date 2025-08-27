@@ -106,6 +106,7 @@ async def obdiag_display_run(scene: str, env_dict: dict = None) -> str:
             cmd += " --env {}={}".format(env_name, env_value)
     return run_obdiag_command(cmd, silent=False)
 
+
 @mcp.tool()
 async def obdiag_gather_log(var: str) -> str:
     """
@@ -121,6 +122,7 @@ async def obdiag_gather_log(var: str) -> str:
     """
     cmd = "obdiag gather log {}".format(var)
     return run_obdiag_command(cmd, silent=True)
+
 
 # 启动 MCP 服务
 def main():
