@@ -32,8 +32,8 @@ jobs:
         run: |
           TAG="${{ github.event.release.tag_name }}"
           case "$TAG" in
-            obshell-mcp-*)
-              echo "src_dir=src/obshell_mcp_server" >> "$GITHUB_OUTPUT"
+            obdiag-mcp-*)
+              echo "src_dir=src/obdiag_mcp_server" >> "$GITHUB_OUTPUT"
               ;;
             # add more packages here
             *)
