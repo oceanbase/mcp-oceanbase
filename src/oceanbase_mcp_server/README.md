@@ -89,6 +89,72 @@ oceanbase_mcp_server --transport sse --port 8000
 ```
 The URL address for the general SSE mode configuration is `http://ip:port/sse`
 
+### 🧠 AI Memory System
+
+**Experimental Feature**: Transform your AI assistant with persistent vector-based memory powered by OceanBase's advanced vector capabilities.
+
+The memory system enables your AI to maintain continuous context across conversations, eliminating the need to repeat personal preferences and information. Four intelligent tools work together to create a seamless memory experience:
+
+- **`ob_memory_query`** - Semantically search and retrieve contextual memories
+- **`ob_memory_insert`** - Automatically capture and store important conversations  
+- **`ob_memory_delete`** - Remove outdated or unwanted memories
+- **`ob_memory_update`** - Evolve memories with new information over time
+
+#### 🚀 Quick Setup
+
+Memory tools are **disabled by default** to avoid the initial embedding model download (0.5~4 GiB). Install extra dependences are necessary.
+
+```
+cd mcp-oceanbase/src/oceanbase_mcp_server
+uv sync --extra memory
+```
+
+Enable intelligent memory with these environment variables:
+
+```bash
+ENABLE_MEMORY=1  # default 0 disabled， set 1 to enable
+EMBEDDING_MODEL_NAME=BAAI/bge-small-en-v1.5 # default BAAI/bge-small-en-v1.5, You can set BAAI/bge-m3 or other models to get better experience.
+EMBEDDING_MODEL_PROVIDER=huggingface
+```
+
+#### 📋 Prerequisites
+
+**Vector Support**: Requires OceanBase v4.3.5.3+ (vector features enabled by default)
+
+```bash
+sudo docker run -p 2881:2881 --name obvector -e MODE=mini -d oceanbase/oceanbase-ce:4.3.5.3-103000092025080818
+```
+
+**Legacy Versions**: For older OceanBase versions, manually configure [ob_vector_memory_limit_percentage](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000003381620).
+
+#### 💡 Usage Example
+
+Experience the power of cross-session intelligent memory:
+
+```
+📅 Monday Conversation
+User: "I love football and basketball, but I don't like swimming. I work in Shanghai using Python."
+AI: "Got it! I've saved your preferences and work information!" 
+    💾 [Automatically calls ob_memory_insert to save preference data]
+
+📅 Wednesday Conversation  
+User: "Recommend some sports I might be interested in"
+AI: 🔍 [Automatically calls ob_memory_query searching "sports preferences"]
+    "Based on your previous preferences, I recommend football and basketball activities! 
+     Since you mentioned not liking swimming, here are some great land-based sports..."
+
+📅 One Week Later
+User: "Where do I work and what programming language do I use?"  
+AI: 🔍 [Automatically calls ob_memory_query searching "work programming"]
+    "You work in Shanghai and primarily use Python for development."
+```
+
+**🎯 Memory System Benefits**:
+- ✅ **Cross-Session Continuity** - No need to reintroduce yourself
+- ✅ **Intelligent Semantic Search** - Understands related concepts and context  
+- ✅ **Personalized Experience** - AI truly "knows" your preferences
+- ✅ **Automatic Capture** - Important information saved without manual effort
+
 ## Security Considerations
 
 - Use a database user with minimal required permissions
