@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 import os
 import time
-from typing import Dict, Optional, List, Tuple
+from typing import Optional, List, Tuple
 from urllib import request, error
 import json
 import argparse
@@ -358,8 +358,7 @@ def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
 
 if ENABLE_MEMORY:
     from pyobvector import ObVecClient, l2_distance, VECTOR
-    from sqlalchemy import Column, Integer, JSON, String, false, text
-    from sqlalchemy import func
+    from sqlalchemy import Column, Integer, JSON, String, text
 
     class OBMemory:
         def __init__(self):
