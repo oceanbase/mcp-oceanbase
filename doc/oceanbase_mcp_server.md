@@ -18,11 +18,12 @@ This server allows AI assistants to list tables, read data, and execute SQL quer
 - [✔️] Get all server nodes (sys tenant only)
 - [✔️] Get resource capacity (sys tenant only)
 - [✔️] Get [ASH](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002013776) report
-- [✔️] Search OceanBase document from official website(experimental)
+- [✔️] Search OceanBase document from official website(experimental)  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This tool is experimental because the API on the official website may change.
 - [✔️] Simple memory based on OB Vector(experimental)
-  This tool is experimental because the API on the official website may change.
+  
 
-## Install
+## Install from source code
 
 ### Clone the repository
 ```bash
@@ -46,6 +47,11 @@ export UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple/"
 ### Install dependencies
 ```bash
 uv pip install .
+```
+## Install from PyPI Repository
+If you wish to use it via pip install, please execute the following command.
+```bash
+uv pip install oceanbase-mcp
 ```
 ## Configuration
 There are two ways to configure the connection information of OceanBase
@@ -97,7 +103,7 @@ uv run oceanbase_mcp_server --transport sse --port 8000
 ```
 If you don't want to use uv, you can start it in the following way
 ```bash
-cd oceanbase_mcp/ && python3 -m server --transport sse --port 9000
+cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
 ```
 The URL address for the general SSE mode configuration is `http://ip:port/sse`
 
@@ -132,6 +138,17 @@ sudo docker run -p 2881:2881 --name obvector -e MODE=mini -d oceanbase/oceanbase
 ```
 
 **Legacy Versions**: For older OceanBase versions, manually configure [ob_vector_memory_limit_percentage](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000003381620).
+
+#### Dependency Installation
+If you use source code Installation, use the following command to install dependencies
+```bash
+cd path/to/mcp-oceanbase/src/oceanbase_mcp_server
+uv pip install -r pyproject.toml --extra memory
+```
+If pip Installation
+```bash
+uv pip install oceanbase-mcp[memory] --extra-index-url https://download.pytorch.org/whl/cpu
+```
 
 #### 💡 Usage Example
 

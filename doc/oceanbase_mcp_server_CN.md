@@ -19,11 +19,12 @@ OceanBase MCP Server 通过 MCP (模型上下文协议) 可以和 OceanBase 进�
 - [✔️] 查询所有的 server 节点信息 （仅支持 sys 租户）
 - [✔️] 查询资源信息 （仅支持 sys 租户）
 - [✔️] 查询 [ASH](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002013776) 报告
-- [✔️] 搜索 OceanBase 官网的文档（实验特性）
+- [✔️] 搜索 OceanBase 官网的文档（实验特性）  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个工具是实验性质的，因为相关 API 接口可能会变化。
 - [✔️] 基于 OB Vector 的简单记忆系统（实验特性）
-  这些工具是实验性质的，因为相关 API 接口可能会变化。
+  
 
-## 安装
+## 从源码安装
 
 ### 克隆仓库
 ```bash
@@ -47,6 +48,11 @@ export UV_DEFAULT_INDEX="https://mirrors.aliyun.com/pypi/simple/"
 ### 安装依赖
 ```bash
 uv pip install .
+```
+## 从 PyPI 仓库安装
+如果想通过 pip install 方式安装，请执行下面的命令。
+```bash
+uv pip install oceanbase-mcp
 ```
 ## 配置
 有两种方式可以配置 OceanBase 的连接信息
@@ -131,6 +137,17 @@ sudo docker run -p 2881:2881 --name obvector -e MODE=mini -d oceanbase/oceanbase
 
 **旧版本支持**：对于较旧的 OceanBase 版本，需要手动配置 [ob_vector_memory_limit_percentage](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000003381620) 开启向量能力。
 
+#### 依赖安装
+首先激活虚拟环境。  
+如果使用的是源码安装，使用下面的命令来安装依赖
+```bash
+cd path/to/mcp-oceanbase/src/oceanbase_mcp_server
+uv pip install -r pyproject.toml --extra memory
+```
+如果是 pip 的安装方式
+```bash
+uv pip install oceanbase-mcp[memory] --extra-index-url https://download.pytorch.org/whl/cpu
+```
 #### 💡 使用示例
 
 体验跨会话智能记忆的强大能力：
