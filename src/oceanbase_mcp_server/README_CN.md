@@ -1,4 +1,4 @@
-[English](oceanbase_mcp_server.md) | 简体中文<br>
+[English](README.md) | 简体中文<br>
 # OceanBase MCP Server
 
 OceanBase MCP Server 通过 MCP (模型上下文协议) 可以和 OceanBase 进行交互。
