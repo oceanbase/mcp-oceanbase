@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from pyobvector import ObVecClient, MatchAgainst, l2_distance, inner_product, cosine_distance
 from sqlalchemy import text
 import ast
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -24,8 +25,7 @@ logger = logging.getLogger("oceanbase_mcp_server")
 
 load_dotenv()
 
-EMBEDDING_MODEL_NAME = os.getenv(
-    "EMBEDDING_MODEL_NAME", "BAAI/bge-small-en-v1.5")
+EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "BAAI/bge-small-en-v1.5")
 EMBEDDING_MODEL_PROVIDER = os.getenv("EMBEDDING_MODEL_PROVIDER", "huggingface")
 ENABLE_MEMORY = int(os.getenv("ENABLE_MEMORY", 0))
 
@@ -284,8 +284,7 @@ def search_oceanbase_document(keyword: str) -> str:
     }
     # Turn the dictionary into a JSON string, then change it to bytes
     qeury_param = json.dumps(qeury_param).encode("utf-8")
-    req = request.Request(search_api_url, data=qeury_param,
-                          headers=headers, method="POST")
+    req = request.Request(search_api_url, data=qeury_param, headers=headers, method="POST")
     # Create an SSL context using certifi to fix HTTPS errors.
     context = ssl.create_default_context(cafile=certifi.where())
     try:
@@ -296,8 +295,7 @@ def search_oceanbase_document(keyword: str) -> str:
             data_array = json_data["data"]  # Parse JSON response
             result_list = []
             for item in data_array:
-                doc_url = "https://www.oceanbase.com/docs/" + \
-                    item["urlCode"] + "-" + item["id"]
+                doc_url = "https://www.oceanbase.com/docs/" + item["urlCode"] + "-" + item["id"]
                 logger.info(f"doc_url:${doc_url}")
                 content = get_ob_doc_content(doc_url, item["id"])
                 result_list.append(content)
@@ -323,8 +321,7 @@ def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
     doc_api_url = (
         "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v4/docDetails"
     )
-    req = request.Request(doc_api_url, data=doc_param,
-                          headers=headers, method="POST")
+    req = request.Request(doc_api_url, data=doc_param, headers=headers, method="POST")
     # Make an SSL context with certifi to fix HTTPS errors.
     context = ssl.create_default_context(cafile=certifi.where())
     try:
@@ -392,13 +389,12 @@ def oceanbase_text_search(
     )
     config = db_conn_info.model_dump()
     client = ObVecClient(
-        uri=config['host']+":"+str(config['port']),
-        user=config['user'],
-        password=config.get('password', ''),
-        db_name=config.get('database', '')
+        uri=config["host"] + ":" + str(config["port"]),
+        user=config["user"],
+        password=config.get("password", ""),
+        db_name=config.get("database", ""),
     )
-    where_clause = [MatchAgainst(
-        full_text_search_expr, *full_text_search_column_name)]
+    where_clause = [MatchAgainst(full_text_search_expr, *full_text_search_column_name)]
     for item in other_where_clause or []:
         where_clause.append(text(item))
     results = client.get(
@@ -406,7 +402,7 @@ def oceanbase_text_search(
         ids=None,
         where_clause=where_clause,
         output_column_name=output_column_name,
-        n_limits=limit
+        n_limits=limit,
     )
     output = f"Search results for '{full_text_search_expr}'"
     if other_where_clause:
@@ -444,17 +440,17 @@ def oceabase_vector_search(
     )
     config = db_conn_info.model_dump()
     client = ObVecClient(
-        uri=config['host']+":"+str(config['port']),
-        user=config['user'],
-        password=config.get('password', ''),
-        db_name=config.get('database', '')
+        uri=config["host"] + ":" + str(config["port"]),
+        user=config["user"],
+        password=config.get("password", ""),
+        db_name=config.get("database", ""),
     )
     match distance_func:
-        case 'l2':
+        case "l2":
             search_distance_func = l2_distance
-        case 'inner product':
+        case "inner product":
             search_distance_func = inner_product
-        case 'cosine':
+        case "cosine":
             search_distance_func = cosine_distance
         case _:
             raise ValueError("Unkown distance function")
@@ -466,7 +462,7 @@ def oceabase_vector_search(
         distance_func=search_distance_func,
         with_dist=with_distance,
         topk=topk,
-        output_column_names=output_column_name
+        output_column_names=output_column_name,
     )
     output = f"Vector search results for '{table_name}:\n\n'"
     for result in results:
@@ -504,17 +500,17 @@ def oceanbase_hybrid_search(
     )
     config = db_conn_info.model_dump()
     client = ObVecClient(
-        uri=config['host']+":"+str(config['port']),
-        user=config['user'],
-        password=config.get('password', ''),
-        db_name=config.get('database', '')
+        uri=config["host"] + ":" + str(config["port"]),
+        user=config["user"],
+        password=config.get("password", ""),
+        db_name=config.get("database", ""),
     )
     match distance_func.lower():
-        case 'l2':
+        case "l2":
             search_distance_func = l2_distance
-        case 'inner product':
+        case "inner product":
             search_distance_func = inner_product
-        case 'cosine':
+        case "cosine":
             search_distance_func = cosine_distance
         case _:
             raise ValueError("Unkown distance function")
@@ -529,7 +525,7 @@ def oceanbase_hybrid_search(
         with_dist=with_distance,
         where_clause=where_clause,
         topk=topk,
-        output_column_names=output_column_name
+        output_column_names=output_column_name,
     )
     output = f"Hybrid search results for '{table_name}:\n\n'"
     for result in results:
@@ -544,8 +540,7 @@ if ENABLE_MEMORY:
     class OBMemory:
         def __init__(self):
             self.embedding_client = self._gen_embedding_client()
-            self.embedding_dimension = len(
-                self.embedding_client.embed_query("test"))
+            self.embedding_dimension = len(self.embedding_client.embed_query("test"))
             logger.info(f"embedding_dimension: {self.embedding_dimension}")
 
             self.client = ObVecClient(
@@ -567,8 +562,7 @@ if ENABLE_MEMORY:
                 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
                 from langchain_huggingface import HuggingFaceEmbeddings
 
-                logger.info(
-                    f"Using HuggingFaceEmbeddings model: {EMBEDDING_MODEL_NAME}")
+                logger.info(f"Using HuggingFaceEmbeddings model: {EMBEDDING_MODEL_NAME}")
                 return HuggingFaceEmbeddings(
                     model_name=EMBEDDING_MODEL_NAME,
                     encode_kwargs={"normalize_embeddings": True},
@@ -591,8 +585,7 @@ if ENABLE_MEMORY:
             if not client.check_table_exists(TABLE_NAME_MEMORY):
                 # Get embedding dimension dynamically from model config
                 cols = [
-                    Column("mem_id", Integer, primary_key=True,
-                           autoincrement=True),
+                    Column("mem_id", Integer, primary_key=True, autoincrement=True),
                     Column("content", String(8000)),
                     Column("embedding", VECTOR(self.embedding_dimension)),
                     Column("meta", JSON),
@@ -740,8 +733,7 @@ if ENABLE_MEMORY:
         client.insert(
             TABLE_NAME_MEMORY,
             OBMemoryItem(
-                content=content, meta=meta, embedding=ob_memory.gen_embedding(
-                    content)
+                content=content, meta=meta, embedding=ob_memory.gen_embedding(content)
             ).model_dump(),
         )
         return "Inserted successfully"
@@ -843,10 +835,8 @@ def main():
         default="stdio",
         help="Specify the MCP server transport type as stdio or sse.",
     )
-    parser.add_argument("--host", default="127.0.0.1",
-                        help="SSE Host to bind to")
-    parser.add_argument("--port", type=int, default=8000,
-                        help="SSE Port to listen on")
+    parser.add_argument("--host", default="127.0.0.1", help="SSE Host to bind to")
+    parser.add_argument("--port", type=int, default=8000, help="SSE Port to listen on")
     args = parser.parse_args()
     transport = args.transport
     logger.info(f"Starting OceanBase MCP server with {transport} mode...")
