@@ -22,7 +22,8 @@ dependencies = [
     "beautifulsoup4>=4.13.5",
     "pydantic>=2.11.7",
     "python-dotenv>=1.1.1",
-    "certifi>=2022.12.7"
+    "certifi>=2022.12.7",
+    "pyobvector>=0.2.15",
 ]
 
 [project.optional-dependencies]
@@ -32,7 +33,6 @@ dev = [
 ]
 memory = [
     "numpy>=1.21.0",
-    "pyobvector>=0.2.15", 
     "langchain-huggingface>=0.3.1",
     "torch>=2.0.0",
     "sentence-transformers>=2.2.2"

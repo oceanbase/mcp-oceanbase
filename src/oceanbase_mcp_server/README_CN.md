@@ -10,6 +10,8 @@ OceanBase MCP Server 通过 MCP (模型上下文协议) 可以和 OceanBase 进�
 - 列出所有 OceanBase 数据库中的表作为资源
 - 读取表中的数据
 - 执行 SQL 语句
+- AI 记忆系统
+- 支持全文查询、向量查询和混合查询
 - 通过环境变量访问数据库
 - 全面的日志记录
 
@@ -22,9 +24,14 @@ OceanBase MCP Server 通过 MCP (模型上下文协议) 可以和 OceanBase 进�
 - [✔️] 搜索 OceanBase 官网的文档（实验特性）  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这个工具是实验性质的，因为相关 API 接口可能会变化。
 - [✔️] 基于 OB Vector 的简单记忆系统（实验特性）
-  
+- [✔️] 使用全文查询在 OceanBase 中搜索文档
+- [✔️] 在 OceanBase 中进行向量查询
+- [✔️] 在 OceanBase 中进行向量和标量的混合查询
 
-## 从源码安装
+## 前提条件
+你需要有一个 Oceanbase 数据库, 可以参考[安装文档](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000003378290)安装或者使用 [OceanBase Cloud](https://www.oceanbase.com/free-trial) 的免费试用。
+
+## 源码安装
 
 ### 克隆仓库
 ```bash
@@ -176,6 +183,142 @@ AI: 🔍 [自动调用 ob_memory_query 搜索"工作 编程"]
 - ✅ **个性化体验** - AI真正"了解"您的喜好
 - ✅ **自动化保存** - 重要信息无需手动记录
 
+## 示例
+下面是一些例子，展示了 OceanBase MCP Server 的一些功能。
+### 例子 1: 列出所有的表
+问题：
+```plaintext
+How many tables are there in the test database, and what are they?
+```
+回答：
+```plaintext
+Tables in test: 
+t1
+t2
+```
+### Example 2: 查看当前租户
+问题：
+```
+What is my current tenant name?
+```
+回答：
+```
+Your current tenant name is 'sys'.
+```
+### 例子 3: 查看所有的 server 节点
+你需要时 sys 租户才能查询所有 server 节点  
+问题：
+```
+Query all server nodes
+```
+回答：
+```
+Successfully queried all server nodes. Here are the details:
+
+| SVR_IP   | SVR_PORT | ID | ZONE  | SQL_PORT | WITH_ROOTSERVER | STATUS | START_SERVICE_TIME        | STOP_TIME | BLOCK_MIGRATE_IN_TIME | CREATE_TIME            | MODIFY_TIME            | BUILD_VERSION                                                                 | LAST_OFFLINE_TIME |
+|----------|----------|----|-------|----------|-----------------|--------|---------------------------|-----------|-----------------------|-------------------------|-------------------------|------------------------------------------------------------------------------|-------------------|
+| 127.0.0.1 | 2882     | 1  | zone1 | 2881     | YES             | ACTIVE | 2024-06-27 15:40:19.003123 | None      | None                  | 2024-06-19 16:39:11.749421 | 2024-06-27 15:40:21.001573 | 4.2.3.1_101000012024061216-c436ab3557c826ab31931d11ec836dc4df09d9de(Jun 12 2024 16:25:30) | None              |
+
+This table provides comprehensive information about each server node, including IP addresses, ports, zones, statuses, and timestamps.
+```
+### 例子 4: 查看资源容量
+你需要是 sys 租户，才可以查询资源容量  
+问题：
+```
+Query the current resource capacity information
+```
+回答：
+```
+The current resource capacity information has been successfully queried. Here are the details:
+
+| SVR_IP   | SVR_PORT | ZONE  | SQL_PORT | CPU_CAPACITY | CPU_CAPACITY_MAX | CPU_ASSIGNED | CPU_ASSIGNED_MAX | MEM_CAPACITY | MEM_ASSIGNED | LOG_DISK_CAPACITY | LOG_DISK_ASSIGNED | LOG_DISK_IN_USE | DATA_DISK_CAPACITY | DATA_DISK_IN_USE | DATA_DISK_HEALTH_STATUS | MEMORY_LIMIT | DATA_DISK_ALLOCATED | DATA_DISK_ABNORMAL_TIME | SSL_CERT_EXPIRED_TIME |
+|----------|----------|-------|----------|--------------|------------------|--------------|------------------|--------------|--------------|-------------------|-------------------|-----------------|--------------------|-----------------|-------------------------|--------------|---------------------|-------------------------|-----------------------|
+| 127.0.0.1 | 2882     | zone1 | 2881     | 4            | 4.0              | 2.0          | 2.0              | 5368709120    | 3221225472    | 5368709120         | 4294967296         | 3556769792       | 10737418240        | 664797184        | NORMAL                  | 6442450944    | 10737418240         | None                    | None                  |
+
+This table provides comprehensive information about the resource capacities and assignments for the server.
+```
+### 例子 5: 拿到 ASH 报告
+拿到 OceanBase Active Session History 报告  
+问题：
+```
+Please provide me with today's ASH report.
+```
+回答：
+```
+The ASH report for today (2025-09-03) has been successfully generated. Key findings include:
+
+Cluster Overview:
+- Name: ob6u2klmn4pwo0
+- Observer Version: OceanBase 4.3.5.2
+- OS: Linux(5.10.134-17.2.al8.x86_64)_x86_64
+- Analysis period: 2025-09-03 00:00:00 to 2025-09-03 11:26:40
+- Average Active Sessions: 0.45
+
+Top Activity:
+1. Tenant t6wxyssara4e8 dominated background activity (99.99%)
+2. Nodes 10.102.32.82, 10.102.64.254, and 10.102.49.151 showed highest activity
+3. Primary activities:
+   - TenantWeakReadService generating cluster versions
+   - LogService I/O operations
+   - TimerWK background tasks
+   - LSRecoveryService reporting
+
+Resource Utilization:
+- Main wait events: exec inner sql wait (various), palf write, sync rpc
+- Top IO operations: COMPACTION tasks (TX_TABLE_MERGE, MINI_MERGE)
+- Primary SQL activity: SELECT statements (17.36% of activity)
+
+The complete report contains detailed breakdowns of:
+- Node-specific activity
+- IO bandwidth usage
+- Latch waits
+- Object access patterns
+- Execution phases
+- SQL execution statistics
+
+Would you like me to extract or highlight any specific sections of the report?
+```
+### 例子 6: 使用全文查询检索文档
+问题：
+```
+Find content in t2 table that mention "apple"
+```
+回答：
+```
+I have successfully queried the documents in the content field of table t2 that mention "apple". Here are the results:
+
+1. Document ID: 2, Author: john, Age: 20, Content: I have a pear and an apple
+2. Document ID: 1, Author: david, Age: 19, Content: I have a pineapple and an apple
+3. Document ID: 3, Author: tom, Age: 21, Content: I also have a pear and an apple
+```
+### 例子 7: 向量查询
+问题：
+```
+Please search for records in table t2 that are close to the vector [0.1, 0.1, 0.1].
+```
+回答：
+```
+The vector search on table t2 has returned results successfully. I can now analyze and present these results to the user.
+
+The search found three records that are close to the vector [0.1, 0.1, 0.1]:
+
+1. Record with id 2, name 'john', age 20, description 'I have a pear and an apple', vector '[0.1,0.1,0.2]', and distance 0.1
+2. Record with id 3, name 'tom', age 21, description 'I also have a pear and an apple', vector '[0.1,0.1,0.2]', and distance 0.1
+3. Record with id 1, name 'david', age 19, description 'I have a pineapple and an apple', vector '[0.1,0.2,0.3]', and distance 0.2236
+
+These records are ordered by their distance from the search vector, with closer matches appearing first.
+```
+### 例子 8: 混合查询
+进行关系条件过滤（即标量）和向量的混合查询，同时使用向量和标量作为查询条件  
+问题：
+```
+Please find the record in table t2 that has a vector close to [0.1, 0.1, 0.2] and an age of 20.
+```
+回答：
+```
+The record in table `t2` that has a vector close to `[0.1, 0.1, 0.2]` and an age of 20 is:
+(2, 'john', 20, 'I have a pear and an apple', '[0.1,0.1,0.2]', 0.0)
+```
 
 ## 安全注意事项
 - 不要提交环境变量信息或者凭证

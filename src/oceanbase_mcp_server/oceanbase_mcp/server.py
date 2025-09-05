@@ -13,7 +13,9 @@ from bs4 import BeautifulSoup
 import certifi
 import ssl
 from pydantic import BaseModel
-
+from pyobvector import ObVecClient, MatchAgainst, l2_distance, inner_product, cosine_distance
+from sqlalchemy import text
+import ast
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -22,7 +24,8 @@ logger = logging.getLogger("oceanbase_mcp_server")
 
 load_dotenv()
 
-EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "BAAI/bge-small-en-v1.5")
+EMBEDDING_MODEL_NAME = os.getenv(
+    "EMBEDDING_MODEL_NAME", "BAAI/bge-small-en-v1.5")
 EMBEDDING_MODEL_PROVIDER = os.getenv("EMBEDDING_MODEL_PROVIDER", "huggingface")
 ENABLE_MEMORY = int(os.getenv("ENABLE_MEMORY", 0))
 
@@ -168,6 +171,11 @@ def get_ob_ash_report(
         The module where the SESSION is located during sampling (PARSE, EXECUTE, PL, etc.)
         SESSION status records, such as SESSION MODULE, ACTION, CLIENT ID
     This will be very useful when you perform performance analysis.RetryClaude can make mistakes. Please double-check responses.
+
+    Args:
+        start_time: Sample Start Time,Format: yyyy-MM-dd HH:mm:ss.
+        end_time: Sample End Time,Format: yyyy-MM-dd HH:mm:ss.
+        tenant_id: Used to specify the tenant ID for generating the ASH Report. Leaving this field blank or setting it to NULL indicates no restriction on the TENANT_ID.
     """
     logger.info(
         f"Calling tool: get_ob_ash_report  with arguments: {start_time}, {end_time}, {tenant_id}"
@@ -203,7 +211,7 @@ def get_current_tenant() -> str:
     logger.info("Calling tool: get_current_tenant")
     sql_query = "show tenant"
     try:
-        result = execute_sql(sql_query)
+        result = ast.literal_eval(execute_sql(sql_query))
         logger.info(f"Current tenant: {result}")
         return result[0][0]
     except Error as e:
@@ -222,7 +230,7 @@ def get_all_server_nodes():
         raise ValueError("Only sys tenant can get all server nodes")
 
     logger.info("Calling tool: get_all_server_nodes")
-    sql_query = "select * from DBA_OB_SERVERS"
+    sql_query = "select * from oceanbase.DBA_OB_SERVERS"
     try:
         return execute_sql(sql_query)
     except Error as e:
@@ -276,7 +284,8 @@ def search_oceanbase_document(keyword: str) -> str:
     }
     # Turn the dictionary into a JSON string, then change it to bytes
     qeury_param = json.dumps(qeury_param).encode("utf-8")
-    req = request.Request(search_api_url, data=qeury_param, headers=headers, method="POST")
+    req = request.Request(search_api_url, data=qeury_param,
+                          headers=headers, method="POST")
     # Create an SSL context using certifi to fix HTTPS errors.
     context = ssl.create_default_context(cafile=certifi.where())
     try:
@@ -287,7 +296,8 @@ def search_oceanbase_document(keyword: str) -> str:
             data_array = json_data["data"]  # Parse JSON response
             result_list = []
             for item in data_array:
-                doc_url = "https://www.oceanbase.com/docs/" + item["urlCode"] + "-" + item["id"]
+                doc_url = "https://www.oceanbase.com/docs/" + \
+                    item["urlCode"] + "-" + item["id"]
                 logger.info(f"doc_url:${doc_url}")
                 content = get_ob_doc_content(doc_url, item["id"])
                 result_list.append(content)
@@ -313,7 +323,8 @@ def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
     doc_api_url = (
         "https://cn-wan-api.oceanbase.com/wanApi/forum/docCenter/productDocFile/v4/docDetails"
     )
-    req = request.Request(doc_api_url, data=doc_param, headers=headers, method="POST")
+    req = request.Request(doc_api_url, data=doc_param,
+                          headers=headers, method="POST")
     # Make an SSL context with certifi to fix HTTPS errors.
     context = ssl.create_default_context(cafile=certifi.where())
     try:
@@ -356,6 +367,176 @@ def get_ob_doc_content(doc_url: str, doc_id: str) -> dict:
         return {"result": "No results were found"}
 
 
+@app.tool()
+def oceanbase_text_search(
+    table_name: str,
+    full_text_search_column_name: list[str],
+    full_text_search_expr: str,
+    other_where_clause: Optional[list[str]] = None,
+    limit: int = 5,
+    output_column_name: Optional[list[str]] = None,
+) -> str:
+    """
+    Search for documents using full text search in an OceanBase table.
+
+    Args:
+        table_name: Name of the table to search.
+        full_text_search_column_name: Specify the columns to be searched in full text.
+        full_text_search_expr: Specify the keywords or phrases to search for.
+        other_where_clause: Other WHERE condition query statements except full-text search.
+        limit: Maximum number of results to return.
+        output_column_name: columns to include in results.
+    """
+    logger.info(
+        f"Calling tool: oceanbase_text_search  with arguments: {table_name}, {full_text_search_column_name}, {full_text_search_expr}"
+    )
+    config = db_conn_info.model_dump()
+    client = ObVecClient(
+        uri=config['host']+":"+str(config['port']),
+        user=config['user'],
+        password=config.get('password', ''),
+        db_name=config.get('database', '')
+    )
+    where_clause = [MatchAgainst(
+        full_text_search_expr, *full_text_search_column_name)]
+    for item in other_where_clause or []:
+        where_clause.append(text(item))
+    results = client.get(
+        table_name=table_name,
+        ids=None,
+        where_clause=where_clause,
+        output_column_name=output_column_name,
+        n_limits=limit
+    )
+    output = f"Search results for '{full_text_search_expr}'"
+    if other_where_clause:
+        output += " and " + ",".join(other_where_clause)
+    output += f" in table '{table_name}':\n\n"
+    for result in results:
+        output += str(result) + "\n\n"
+    return output
+
+
+@app.tool()
+def oceabase_vector_search(
+    table_name: str,
+    vector_data: list[float],
+    vec_column_name: str = "vector",
+    distance_func: Optional[str] = "l2",
+    with_distance: Optional[bool] = True,
+    topk: int = 5,
+    output_column_name: Optional[list[str]] = None,
+) -> str:
+    """
+    Perform vector similarity search on an OceanBase table.
+
+    Args:
+        table_name: Name of the table to search.
+        vector_data: Query vector.
+        vec_column_name: column name containing vectors to search.
+        distance_func: The index distance algorithm used when comparing the distance between two vectors.
+        with_distance: Whether to output distance data.
+        topk: Number of results returned.
+        output_column_name: Returned table fields.
+    """
+    logger.info(
+        f"Calling tool: oceabase_vector_search  with arguments: {table_name}, {vector_data[:10]}, {vec_column_name}"
+    )
+    config = db_conn_info.model_dump()
+    client = ObVecClient(
+        uri=config['host']+":"+str(config['port']),
+        user=config['user'],
+        password=config.get('password', ''),
+        db_name=config.get('database', '')
+    )
+    match distance_func:
+        case 'l2':
+            search_distance_func = l2_distance
+        case 'inner product':
+            search_distance_func = inner_product
+        case 'cosine':
+            search_distance_func = cosine_distance
+        case _:
+            raise ValueError("Unkown distance function")
+
+    results = client.ann_search(
+        table_name=table_name,
+        vec_data=vector_data,
+        vec_column_name=vec_column_name,
+        distance_func=search_distance_func,
+        with_dist=with_distance,
+        topk=topk,
+        output_column_names=output_column_name
+    )
+    output = f"Vector search results for '{table_name}:\n\n'"
+    for result in results:
+        output += str(result) + "\n\n"
+    return output
+
+
+@app.tool()
+def oceanbase_hybrid_search(
+    table_name: str,
+    vector_data: list[float],
+    vec_column_name: str = "vector",
+    distance_func: Optional[str] = "l2",
+    with_distance: Optional[bool] = True,
+    filter_expr: Optional[list[str]] = None,
+    topk: int = 5,
+    output_column_name: Optional[list[str]] = None,
+) -> str:
+    """
+    Perform hybird search combining relational condition filtering(that is, scalar) and vector search.
+
+    Args:
+        table_name: Name of the table to search.
+        vector_data: Query vector.
+        vec_column_name: column name containing vectors to search.
+        distance_func: The index distance algorithm used when comparing the distance between two vectors.
+        with_distance: Whether to output distance data.
+        filter_expr: Scalar conditions requiring filtering in where clause.
+        topk: Number of results returned.
+        output_column_name: Returned table fields,unless explicitly requested, please do not provide.
+    """
+    logger.info(
+        f"""Calling tool: oceanbase_hybrid_search  with arguments: {table_name}, {vector_data[:10]}, {vec_column_name}
+        ,{filter_expr}"""
+    )
+    config = db_conn_info.model_dump()
+    client = ObVecClient(
+        uri=config['host']+":"+str(config['port']),
+        user=config['user'],
+        password=config.get('password', ''),
+        db_name=config.get('database', '')
+    )
+    match distance_func.lower():
+        case 'l2':
+            search_distance_func = l2_distance
+        case 'inner product':
+            search_distance_func = inner_product
+        case 'cosine':
+            search_distance_func = cosine_distance
+        case _:
+            raise ValueError("Unkown distance function")
+    where_clause = []
+    for item in filter_expr or []:
+        where_clause.append(text(item))
+    results = client.ann_search(
+        table_name=table_name,
+        vec_data=vector_data,
+        vec_column_name=vec_column_name,
+        distance_func=search_distance_func,
+        with_dist=with_distance,
+        where_clause=where_clause,
+        topk=topk,
+        output_column_names=output_column_name
+    )
+    output = f"Hybrid search results for '{table_name}:\n\n'"
+    for result in results:
+        output += str(result) + "\n\n"
+    return output
+
+
 if ENABLE_MEMORY:
     from pyobvector import ObVecClient, l2_distance, VECTOR
     from sqlalchemy import Column, Integer, JSON, String, text
@@ -363,7 +544,8 @@ if ENABLE_MEMORY:
     class OBMemory:
         def __init__(self):
             self.embedding_client = self._gen_embedding_client()
-            self.embedding_dimension = len(self.embedding_client.embed_query("test"))
+            self.embedding_dimension = len(
+                self.embedding_client.embed_query("test"))
             logger.info(f"embedding_dimension: {self.embedding_dimension}")
 
             self.client = ObVecClient(
@@ -385,7 +567,8 @@ if ENABLE_MEMORY:
                 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
                 from langchain_huggingface import HuggingFaceEmbeddings
 
-                logger.info(f"Using HuggingFaceEmbeddings model: {EMBEDDING_MODEL_NAME}")
+                logger.info(
+                    f"Using HuggingFaceEmbeddings model: {EMBEDDING_MODEL_NAME}")
                 return HuggingFaceEmbeddings(
                     model_name=EMBEDDING_MODEL_NAME,
                     encode_kwargs={"normalize_embeddings": True},
@@ -408,7 +591,8 @@ if ENABLE_MEMORY:
             if not client.check_table_exists(TABLE_NAME_MEMORY):
                 # Get embedding dimension dynamically from model config
                 cols = [
-                    Column("mem_id", Integer, primary_key=True, autoincrement=True),
+                    Column("mem_id", Integer, primary_key=True,
+                           autoincrement=True),
                     Column("content", String(8000)),
                     Column("embedding", VECTOR(self.embedding_dimension)),
                     Column("meta", JSON),
@@ -556,7 +740,8 @@ if ENABLE_MEMORY:
         client.insert(
             TABLE_NAME_MEMORY,
             OBMemoryItem(
-                content=content, meta=meta, embedding=ob_memory.gen_embedding(content)
+                content=content, meta=meta, embedding=ob_memory.gen_embedding(
+                    content)
             ).model_dump(),
         )
         return "Inserted successfully"
@@ -658,8 +843,10 @@ def main():
         default="stdio",
         help="Specify the MCP server transport type as stdio or sse.",
     )
-    parser.add_argument("--host", default="127.0.0.1", help="SSE Host to bind to")
-    parser.add_argument("--port", type=int, default=8000, help="SSE Port to listen on")
+    parser.add_argument("--host", default="127.0.0.1",
+                        help="SSE Host to bind to")
+    parser.add_argument("--port", type=int, default=8000,
+                        help="SSE Port to listen on")
     args = parser.parse_args()
     transport = args.transport
     logger.info(f"Starting OceanBase MCP server with {transport} mode...")
