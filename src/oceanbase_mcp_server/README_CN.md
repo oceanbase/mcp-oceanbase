@@ -59,7 +59,7 @@ uv pip install .
 ## 从 PyPI 仓库安装
 如果想通过 pip install 方式安装，请执行下面的命令。
 ```bash
-uv pip install oceanbase-mcp
+uv pip install oceanbase-mcp-server
 ```
 ## 配置
 有两种方式可以配置 OceanBase 的连接信息
@@ -153,7 +153,7 @@ uv pip install -r pyproject.toml --extra memory
 ```
 如果是 pip 的安装方式
 ```bash
-uv pip install oceanbase-mcp[memory] --extra-index-url https://download.pytorch.org/whl/cpu
+uv pip install oceanbase-mcp-server[memory] --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 #### 💡 使用示例
 
