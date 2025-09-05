@@ -139,7 +139,7 @@ sudo docker run -p 2881:2881 --name obvector -e MODE=mini -d oceanbase/oceanbase
 
 **Legacy Versions**: For older OceanBase versions, manually configure [ob_vector_memory_limit_percentage](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000003381620).
 
-#### Dependency Installation
+#### ⬇️ Dependency Installation
 If you use source code Installation, use the following command to install dependencies
 ```bash
 cd path/to/mcp-oceanbase/src/oceanbase_mcp_server

@@ -67,7 +67,7 @@ OB_DATABASE=your_database
 2. 在 .env 文件中进行配置
 ## 使用方法
 
-### stdio 模式
+### Stdio 模式
 在支持 MCP 的客户端中，将下面的内容填入配置文件，请根据实际信息修改
 ```json
 {
@@ -91,7 +91,7 @@ OB_DATABASE=your_database
   }
 }
 ```
-### sse 模式
+### SSE 模式
 在 mcp-oceanbase/src/oceanbase_mcp_server 目录下，执行下面的命令，端口号是可配置的。<br>
 '--transport'： MCP 的传输模式，stdio 或者 sse，默认是 stdio<br>
 '--host'： sse 模式绑定的 host，默认是 127.0.0.1，也就是只能本机访问，如果需要远程访问，可以设置为 0.0.0.0<br>
@@ -137,7 +137,7 @@ sudo docker run -p 2881:2881 --name obvector -e MODE=mini -d oceanbase/oceanbase
 
 **旧版本支持**：对于较旧的 OceanBase 版本，需要手动配置 [ob_vector_memory_limit_percentage](https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000003381620) 开启向量能力。
 
-#### 依赖安装
+#### ⬇️ 依赖安装
 首先激活虚拟环境。  
 如果使用的是源码安装，使用下面的命令来安装依赖
 ```bash
