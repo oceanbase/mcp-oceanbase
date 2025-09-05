@@ -57,7 +57,7 @@ uv pip install .
 ## Install from PyPI Repository
 If you wish to use it via pip install, please execute the following command.
 ```bash
-uv pip install oceanbase-mcp
+uv pip install oceanbase-mcp-server
 ```
 ## Configuration
 There are two ways to configure the connection information of OceanBase
@@ -153,7 +153,7 @@ uv pip install -r pyproject.toml --extra memory
 ```
 If pip Installation
 ```bash
-uv pip install oceanbase-mcp[memory] --extra-index-url https://download.pytorch.org/whl/cpu
+uv pip install oceanbase-mcp-server[memory] --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
 #### 💡 Usage Example
