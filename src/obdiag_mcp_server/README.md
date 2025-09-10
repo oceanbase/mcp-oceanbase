@@ -20,7 +20,7 @@ The OBDiag MCP Server provides a standardized interface for AI assistants to int
 
 Before using the OBDiag MCP Server, ensure that:
 
-1. **Python 3.11+**: The server requires Python 3.11 or higher
+1. **Python 3.10+**: The server requires Python 3.10 or higher
 2. **OBDiag is installed**: The server requires OBDiag to be installed and accessible via the `obdiag` command
 3. **Configuration file exists**: The OBDiag configuration file should be present at `~/.obdiag/config.yml`
 
