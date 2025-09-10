@@ -21,13 +21,14 @@ def read_readme():
 def get_requirements():
     requirements = []
     try:
+        # tomllib is available in Python 3.11+
         import tomllib
 
         with open("pyproject.toml", "rb") as f:
             data = tomllib.load(f)
             requirements = data.get("project", {}).get("dependencies", [])
     except ImportError:
-        # Fallback for Python < 3.11
+        # Fallback for Python 3.10
         try:
             import tomli as tomllib
 
@@ -35,7 +36,7 @@ def get_requirements():
                 data = tomllib.load(f)
                 requirements = data.get("project", {}).get("dependencies", [])
         except ImportError:
-            # Manual fallback
+            # Manual fallback for Python 3.10
             requirements = [
                 "fastmcp>=1.0",
                 "uvicorn>=0.27.1",
@@ -60,6 +61,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Topic :: Database",
