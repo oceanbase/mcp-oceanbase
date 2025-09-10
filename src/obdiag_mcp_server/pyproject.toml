@@ -1,6 +1,6 @@
 [project]
 name = "obdiag-mcp"
-version = "0.0.1"
+version = "0.0.2"
 description = "OBDiag MCP Server - Model Context Protocol server for OceanBase Diagnostic Tool"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -17,8 +17,7 @@ classifiers = [
 
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Database",
     "Topic :: System :: Monitoring",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -31,7 +30,7 @@ keywords = [
     "database",
     "monitoring",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "fastmcp>=1.0",
     "uvicorn>=0.27.1",
