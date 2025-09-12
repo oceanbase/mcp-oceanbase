@@ -12,6 +12,7 @@ OceanBase MCP Server 通过 MCP (模型上下文协议) 可以和 OceanBase 进�
 - 执行 SQL 语句
 - AI 记忆系统
 - 支持全文查询、向量查询和混合查询
+- 鉴权
 - 通过环境变量访问数据库
 - 全面的日志记录
 
@@ -112,7 +113,36 @@ cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
 ```
 sse 模式访问地址示例： `http://ip:port/sse`
 
-
+#### 鉴权
+可以在环境变量或者 env 文件中配置 ALLOWED_TOKENS 变量，然后在 MCP Client 的请求头中增加“Authorization”: “Bearer \<token\>” 配置。只有携带有效 token 的请求可以访问 MCP 服务，如果有多个
+token，可以使用英文的逗号分隔。  
+示例配置：
+```
+ALLOWED_TOKENS=tokenOne,tokenTwo
+``` 
+##### CherryStudio
+在 MCP->General->Headers 的输入框中增加 `Authorization=Bearer <token>` 的配置
+##### Cursor
+在 MCP 的配置文件里，像下面这样配置：
+```json
+{
+  "mcpServers": {
+    "ob-sse": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "sse",
+      "url": "http://ip:port/sse",
+      "headers": {
+        "Authorization": "Bearer <token>"
+      }
+    }
+  }
+}
+```
+##### Cline
+目前 Cline 在请求头增加的配置无法发送到 server 端。  
+可以参考这个 [issue](https://github.com/cline/cline/issues/4391)。
 ### 🧠 AI 记忆系统
 
 **实验特性**：基于 OceanBase 先进向量能力的持久化记忆系统，让您的 AI 助手拥有超强记忆力。

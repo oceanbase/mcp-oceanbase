@@ -11,6 +11,7 @@ This server allows AI assistants to list tables, read data, and execute SQL quer
 - Execute SQL queries with proper error handling
 - AI Memory System
 - Full text search, vector search and hybrid search
+- Authorization
 - Secure database access through environment variables
 - Comprehensive logging
 
@@ -113,6 +114,35 @@ cd oceanbase_mcp/ && python3 -m server --transport sse --port 8000
 ```
 The URL address for the general SSE mode configuration is `http://ip:port/sse`
 
+#### Authorization
+The ALLOWED_TOKENS variable can be configured in environment variables or an env file. Then, add “Authorization”: “Bearer \<token\>” to the request header of the MCP Client. Only requests carrying a valid token can access the MCP server service. Multiple tokens can be separated by commas.  
+For Example:
+```
+ALLOWED_TOKENS=tokenOne,tokenTwo
+``` 
+##### CherryStudio 
+Add `Authorization=Bearer <token>` to the MCP->General->Headers input field.
+##### Cursor
+In the MCP configuration file, configure it as follows:
+```json
+{
+  "mcpServers": {
+    "ob-sse": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "type": "sse",
+      "url": "http://ip:port/sse",
+      "headers": {
+        "Authorization": "Bearer <token>"
+      }
+    }
+  }
+}
+```
+##### Cline
+Cline does not support setting Authorization in request headers.  
+You can refer to this [issue](https://github.com/cline/cline/issues/4391).
 
 ### 🧠 AI Memory System
 
