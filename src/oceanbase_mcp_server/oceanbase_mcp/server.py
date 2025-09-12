@@ -52,30 +52,35 @@ class OBMemoryItem(BaseModel):
     meta: dict
     embedding: List[float]
 
+
 # Check if authentication should be enabled based on ALLOWED_TOKENS
 # This check happens after load_dotenv() so it can read from .env file
 allowed_tokens_str = os.getenv("ALLOWED_TOKENS", "")
 enable_auth = bool(allowed_tokens_str.strip())
+
+
 class SimpleTokenVerifier(TokenVerifier):
     """
     Simple token verifier that validates tokens against a list of allowed tokens.
     Configure allowed tokens via ALLOWED_TOKENS environment variable (comma-separated).
     """
-    
+
     def __init__(self):
         # Get allowed tokens from environment variable
         allowed_tokens_str = os.getenv("ALLOWED_TOKENS", "")
-        self.allowed_tokens = set(token.strip() for token in allowed_tokens_str.split(",") if token.strip())
-        
+        self.allowed_tokens = set(
+            token.strip() for token in allowed_tokens_str.split(",") if token.strip()
+        )
+
         logger.info(f"Token verifier initialized with {len(self.allowed_tokens)} allowed tokens")
-    
+
     async def verify_token(self, token: str) -> AccessToken | None:
         """
         Verify a bearer token.
-        
+
         Args:
             token: The token to verify
-            
+
         Returns:
             AccessToken if valid, None if invalid
         """
@@ -83,18 +88,15 @@ class SimpleTokenVerifier(TokenVerifier):
         if not token or not token.strip():
             logger.debug("Empty token provided")
             return None
-        
+
         # Check if token is in allowed list
         if token not in self.allowed_tokens:
             logger.warning(f"Invalid token provided: {token[:10]}...")
             return None
-        
+
         logger.debug(f"Valid token accepted: {token[:10]}...")
         return AccessToken(
-            token=token,
-            client_id="authenticated_client",
-            scopes=["read", "write"],
-            expires_at=None
+            token=token, client_id="authenticated_client", scopes=["read", "write"], expires_at=None
         )
 
 
@@ -116,8 +118,8 @@ if enable_auth:
         auth=AuthSettings(
             # Because the TokenVerifier is being used, the following two URLs only need to comply with the URL rules.
             issuer_url="http://localhost:8000",
-            resource_server_url="http://localhost:8000"
-        )
+            resource_server_url="http://localhost:8000",
+        ),
     )
 else:
     # Initialize server without authentication
